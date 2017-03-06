@@ -21,7 +21,7 @@ def u(s):
     if sys.version_info[0] == 3:
         return s
 
-__appname__ = 'my_test'
+__appname__ = 'qt_img'
 
 
 class ToolBar(QToolBar):
@@ -105,7 +105,7 @@ class WindowMixin(object):
         toolbar.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         if actions:
             addActions(toolbar, actions)
-        self.addToolBar(Qt.LeftToolBarArea, toolbar)
+        self.addToolBar(Qt.BottomToolBarArea, toolbar)
         return toolbar
 
 
@@ -138,11 +138,14 @@ class MainWindow(QMainWindow, WindowMixin):
         self.statusBar().show()
 
         action = partial(newAction, self)
-
+        # menus action
         open_action = action('&Open File', self.openFile,
                              'Ctrl+O', None, u'Open image file')
         quit_action = action('&Quit', self.close,
                              'Ctrl+Q', None, u'Quit application')
+        fit_action = action('&Fit Window', self.fitWindowSize,
+                             None, None, u'Fit window')
+        # toolbar action
         draw_action = action('&Draw', self.draw,
                              None, None, u'draw')
         next_action = action('&Next', self.openNextImg,
@@ -153,8 +156,9 @@ class MainWindow(QMainWindow, WindowMixin):
         tool = [next_action, prev_action, draw_action]
         addActions(self.tools, tool)
         # set menus
-        self.menus = struct(file=self.menu('&File'))
+        self.menus = struct(file=self.menu('&File'),  view=self.menu('&View'))
         addActions(self.menus.file, (open_action, None, quit_action))
+        addActions(self.menus.view, (fit_action,))
 
     def scanAllImages(self, folderPath):
         extensions = ['.jpeg','.jpg', '.png', '.bmp']
@@ -230,6 +234,12 @@ class MainWindow(QMainWindow, WindowMixin):
             self.filename = u(filename)
             return True
         return False
+
+    def fitWindowSize(self):
+        if self.canvas.pixmap:
+            self.canvas.scale = self.scaleFitWindow()
+            self.canvas.adjustSize()
+            self.canvas.update()
 
     def openNextImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
