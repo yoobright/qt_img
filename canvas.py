@@ -2,6 +2,7 @@
 from __future__ import print_function, division
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
+from shape import Shape
 
 CURSOR_DEFAULT = Qt.ArrowCursor
 CURSOR_POINT = Qt.PointingHandCursor
@@ -19,17 +20,25 @@ def read(filename, default=None):
     except:
         return default
 
+
 class Canvas(QWidget):
     zoomRequest = pyqtSignal(int)
+    mouseMoveSignal = pyqtSignal(str)
 
     def __init__(self, *args, **kwargs):
         super(Canvas, self).__init__(*args, **kwargs)
         self.mode = EDIT
+        self.shapes = []
         self._cursor = CURSOR_DEFAULT
         self._painter = QPainter()
         self.pixmap = QPixmap('test.jpg')
         self.scale = 1.0
+        # Set widget options
+        self.setMouseTracking(True)
+        self.setFocusPolicy(Qt.WheelFocus)
 
+    def transformPos(self, point):
+        return point / self.scale - self.offsetToCenter()
 
     def offsetToCenter(self):
         s = self.scale
@@ -66,11 +75,7 @@ class Canvas(QWidget):
             self.mode = DRAW
 
     def enterEvent(self, ev):
-        if self.isEditMode():
-            self.restoreCursor()
-        else:
-            self.overrideCursor(self._cursor)
-        # print('enter')
+        pass
 
     def leaveEvent(self, ev):
         self.restoreCursor()
@@ -79,12 +84,19 @@ class Canvas(QWidget):
         self.restoreCursor()
         # print('focus')
 
-    def mouseMoveEvent(self, QMouseEvent):
+    def mouseMoveEvent(self, ev):
+        # self.setCursor()
+        pos = self.transformPos(ev.pos())
+        if (0 < pos.x() < self.pixmap.width() and
+            0 < pos.y() < self.pixmap.height()):
+            pos_str = "x: {}, y; {}".format(round(pos.x()), round(pos.y()))
+            self.mouseMoveSignal.emit(pos_str)
         if self.isDrawMode():
-            self.overrideCursor(CURSOR_DRAW)
-            # print("Move")
+            self.setCursor(CURSOR_DRAW)
+        #     self.overrideCursor(CURSOR_DRAW)
         else:
-            self.restoreCursor()
+            self.setCursor(CURSOR_DEFAULT)
+
 
 
     def loadPixmap(self, pixmap):

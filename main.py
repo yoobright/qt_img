@@ -124,6 +124,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas = Canvas()
         self.canvas.setObjectName(_fromUtf8("canvas"))
         # self.canvas.zoomRequest.connect(self.zoomRequest)
+        self.canvas.mouseMoveSignal.connect(self.status)
 
         self.scroll = QScrollArea()
         self.scroll.setWidget(self.canvas)
@@ -134,6 +135,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.setCentralWidget(self.scroll)
 
         self.tools = self.toolbar(u"Tools")
+        self.tools.setMovable(False)
         self.statusBar().showMessage('test app started.')
         self.statusBar().show()
 
@@ -147,7 +149,7 @@ class MainWindow(QMainWindow, WindowMixin):
                              None, None, u'Fit window')
         # toolbar action
         draw_action = action('&Draw', self.draw,
-                             None, None, u'draw')
+                             None, None, u'Draw')
         next_action = action('&Next', self.openNextImg,
                              None, None, u'Open Next')
         prev_action = action('&Prev', self.openPrevImg,
@@ -195,7 +197,7 @@ class MainWindow(QMainWindow, WindowMixin):
         return QMessageBox.critical(self, title, '<p><b>%s</b></p>%s' %
                                     (title, message))
 
-    def status(self, message, delay=5000):
+    def status(self, message, delay=3000):
         if delay is not None:
             self.statusBar().showMessage(message, delay)
 
