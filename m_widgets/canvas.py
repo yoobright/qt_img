@@ -28,7 +28,8 @@ class Canvas(QWidget):
     def __init__(self, *args, **kwargs):
         super(Canvas, self).__init__(*args, **kwargs)
         self.mode = EDIT
-        self.shapes = []
+        self.true_meta_shapes = []
+        self.prop_meta_shapes = []
         self._cursor = CURSOR_DEFAULT
         self._painter = QPainter()
         self.pixmap = QPixmap('test.jpg')
@@ -61,9 +62,8 @@ class Canvas(QWidget):
         # print(self.pixmap)
         p.drawPixmap(0, 0, self.pixmap)
         Shape.scale = self.scale
-        for shape in self.shapes:
-            # print(self.shapes)
-            print("draw shape")
+        for meta_shape in self.true_meta_shapes:
+            shape = meta_shape['shape']
             shape.paint(p)
         p.end()
 
@@ -101,24 +101,24 @@ class Canvas(QWidget):
             status_str = u"x: {:<4d} y: {:<4d} rgb: {:<4d} {:<4d} {:<4d}"\
                 .format(x, y, r, g, b)
             self.mouseMoveSignal.emit(status_str)
+
         if self.isDrawMode():
             self.setCursor(CURSOR_DRAW)
         #     self.overrideCursor(CURSOR_DRAW)
         else:
             self.setCursor(CURSOR_DEFAULT)
 
-
-
     def loadPixmap(self, pixmap):
         self.pixmap = pixmap
-        self.shapes = []
+        self.true_shapes = []
         self.repaint()
-
 
     def overrideCursor(self, cursor):
         self.restoreCursor()
         self._cursor = cursor
         QApplication.setOverrideCursor(cursor)
+
+
 
     def restoreCursor(self):
         QApplication.restoreOverrideCursor()

@@ -9,8 +9,8 @@ class Shape(object):
     line_color = GT_LINE_COLOR
     scale = 1.0
 
-    def __init__(self, label=None, line_color=None):
-        self.label = label
+    def __init__(self, name):
+        self.name = name
         self.points = []
         self.fill = False
         self.selected = False
@@ -33,3 +33,6 @@ class Shape(object):
                 line_path.lineTo(p)
             line_path.lineTo(self.points[0])
             painter.drawPath(line_path)
+
+    def addPoint(self, point):
+            self.points.append(point)

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-import sys
+
 import os
+import sys
 from functools import partial
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-
-from canvas import Canvas
+from m_widgets.canvas import Canvas
 
 try:
     _fromUtf8 = QString.fromUtf8
@@ -111,12 +112,13 @@ class WindowMixin(object):
 
 class MainWindow(QMainWindow, WindowMixin):
     def __init__(self, parent=None):
-        self.filename = None
+        self.imgFname = None
         self.imageData = None
         self.imageDir = None
         self.imageList = None
         self.imageIdx = None
         self.xmlDir = None
+        self.xmlFname = None
 
         QWidget.__init__(self, parent)
         self.setWindowTitle(__appname__)
@@ -189,8 +191,8 @@ class MainWindow(QMainWindow, WindowMixin):
         return images
 
     def openFile(self):
-        path = os.path.dirname(str(self.filename)) \
-            if self.filename else '.'
+        path = os.path.dirname(str(self.imgFname)) \
+            if self.imgFname else '.'
         # formats = ['*.%s' % str(fmt).lower() \
         #            for fmt in QImageReader.supportedImageFormats()]
         formats = "*.bmp *.jpeg *.jpg *.png"
@@ -226,7 +228,8 @@ class MainWindow(QMainWindow, WindowMixin):
         return w1 / w2 if a2 >= a1 else h1 / h2
 
     def resetState(self):
-        self.filename = None
+        self.imgFname = None
+        self.imageData = None
         self.canvas.resetState()
 
     def loadFile(self, filename=None):
@@ -246,7 +249,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.adjustSize()
             self.canvas.update()
             self.canvas.setMode('edit')
-            self.filename = u(filename)
+            self.imgFname = u(filename)
             return True
         return False
 
@@ -257,8 +260,8 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.update()
 
     def setXMLDir(self):
-        curr_path = os.path.dirname(self.filename)\
-                if self.filename else '.'
+        curr_path = os.path.dirname(self.imgFname) \
+                if self.imgFname else '.'
 
         dir_path = str(QFileDialog.getExistingDirectory(self,
             '%s - Open Directory' % __appname__,  curr_path,
@@ -268,9 +271,24 @@ class MainWindow(QMainWindow, WindowMixin):
             dir_path = dir_path.replace('\\', '/')
             self.xmlDir = dir_path
 
+        xml_file = os.path.join(self.xmlDir,
+            os.path.basename(self.imgFname) + ".xml").replace('\\', '/')
+
+        if os.path.exists(xml_file):
+            print("find xml file")
+            self.xmlFname = xml_file
+
+        else:
+            print("can't find xml file")
+
+    # def loadL
+
     def showInfo(self):
-        print(self.filename)
-        print(self.xmlDir)
+        print("imgFname: {}".format(self.imgFname))
+        print("imageDir: {}".format(self.imageDir))
+        print("imageIdx: {}".format(self.imageIdx))
+        print("xmlDir: {}".format(self.xmlDir))
+        print("xmlFname: {}".format(self.xmlFname))
 
     def openNextImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
@@ -323,8 +341,8 @@ class MainWindow(QMainWindow, WindowMixin):
     #     self.move(qr.topLeft())
 
     def testImg(self):
-        from shape import Shape
-        if len(self.canvas.shapes) < 1:
+        from m_widgets.shape import Shape
+        if len(self.canvas.true_meta_shapes) < 1:
             test_shape = Shape('test')
             test_shape.points = [
                 QPoint(100, 100),
@@ -332,7 +350,10 @@ class MainWindow(QMainWindow, WindowMixin):
                 QPoint(200, 200),
                 QPoint(200, 100),
             ]
-            self.canvas.shapes.append(test_shape)
+            meta_shape = {
+                'shape': test_shape
+            }
+            self.canvas.true_meta_shapes.append(meta_shape)
         self.canvas.update()
 
 
