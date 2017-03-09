@@ -8,6 +8,7 @@ from functools import partial
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from m_widgets.canvas import Canvas
+from io_utils.xmlFile import xmlFile
 
 try:
     _fromUtf8 = QString.fromUtf8
@@ -271,17 +272,22 @@ class MainWindow(QMainWindow, WindowMixin):
             dir_path = dir_path.replace('\\', '/')
             self.xmlDir = dir_path
 
-        xml_file = os.path.join(self.xmlDir,
+        self.loadXMLFile()
+
+    def loadXMLFile(self):
+        if self.xmlDir:
+            xml_file = os.path.join(self.xmlDir,
             os.path.basename(self.imgFname) + ".xml").replace('\\', '/')
 
-        if os.path.exists(xml_file):
-            print("find xml file")
-            self.xmlFname = xml_file
+            if os.path.exists(xml_file):
+                self.status(u'find xml file', delay=1000)
+                self.xmlFname = xml_file
+                xml_file = xmlFile(self.xmlFname)
+                self.canvas.true_meta_shapes = xml_file.true_meta_shapes
+                self.canvas.repaint()
+            else:
+                self.status(u'can not find xml file', delay=3000)
 
-        else:
-            print("can't find xml file")
-
-    # def loadL
 
     def showInfo(self):
         print("imgFname: {}".format(self.imgFname))
@@ -304,6 +310,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         filename = self.imageList[nextIdx]
         self.loadFile(filename)
+        self.loadXMLFile()
         self.imageIdx = nextIdx
 
     def openPrevImg(self):
@@ -320,6 +327,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         filename = self.imageList[prevIdx]
         self.loadFile(filename)
+        self.loadXMLFile()
         self.imageIdx = prevIdx
 
     def draw(self):

@@ -21,7 +21,6 @@ class Shape(object):
             color.setAlpha(200)
             pen = QPen()
             pen.setColor(color)
-            print(self.scale)
             pen.setWidth(max(1, int(round(2.0 / self.scale))))
             painter.setPen(pen)
 
@@ -29,7 +28,6 @@ class Shape(object):
             line_path.moveTo(self.points[0])
 
             for i, p in enumerate(self.points):
-                print(p)
                 line_path.lineTo(p)
             line_path.lineTo(self.points[0])
             painter.drawPath(line_path)
