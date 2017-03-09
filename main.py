@@ -116,6 +116,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.imageDir = None
         self.imageList = None
         self.imageIdx = None
+        self.xmlDir = None
 
         QWidget.__init__(self, parent)
         self.setWindowTitle(__appname__)
@@ -124,7 +125,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas = Canvas()
         self.canvas.setObjectName(_fromUtf8("canvas"))
         # self.canvas.zoomRequest.connect(self.zoomRequest)
-        self.canvas.mouseMoveSignal.connect(self.status)
+        self.canvas.mouseMoveSignal.connect(self.statusBar().showMessage)
 
         self.scroll = QScrollArea()
         self.scroll.setWidget(self.canvas)
@@ -145,8 +146,13 @@ class MainWindow(QMainWindow, WindowMixin):
                              'Ctrl+O', None, u'Open image file')
         quit_action = action('&Quit', self.close,
                              'Ctrl+Q', None, u'Quit application')
+        set_anno_action = action('Set XML Dir', self.setXMLDir,
+                             None, None, u'Set XML Dir')
         fit_action = action('&Fit Window', self.fitWindowSize,
                              None, None, u'Fit window')
+
+        info_action = action('&Info', self.showInfo,
+                             None, None, u'Info')
         # toolbar action
         draw_action = action('&Draw', self.draw,
                              None, None, u'Draw')
@@ -154,13 +160,19 @@ class MainWindow(QMainWindow, WindowMixin):
                              None, None, u'Open Next')
         prev_action = action('&Prev', self.openPrevImg,
                              None, None, u'Open Prev')
+
+        test_action = action('&Test', self.testImg,
+                             None, None, u'Test')
+
         # set tools
-        tool = [next_action, prev_action, draw_action]
+        tool = [next_action, prev_action, draw_action, test_action]
         addActions(self.tools, tool)
         # set menus
-        self.menus = struct(file=self.menu('&File'),  view=self.menu('&View'))
-        addActions(self.menus.file, (open_action, None, quit_action))
+        self.menus = struct(file=self.menu('&File'),  view=self.menu('&View'),)
+        addActions(self.menus.file, (open_action, set_anno_action,
+                                     None, quit_action))
         addActions(self.menus.view, (fit_action,))
+        self.menuBar().addAction(info_action)
 
     def scanAllImages(self, folderPath):
         extensions = ['.jpeg','.jpg', '.png', '.bmp']
@@ -172,6 +184,7 @@ class MainWindow(QMainWindow, WindowMixin):
                     path = u(os.path.abspath(relatviePath))
                     images.append(path)
         images.sort(key=lambda x: x.lower())
+        # for windows dir
         images = [x.replace('\\', '/') for x in images]
         return images
 
@@ -197,7 +210,7 @@ class MainWindow(QMainWindow, WindowMixin):
         return QMessageBox.critical(self, title, '<p><b>%s</b></p>%s' %
                                     (title, message))
 
-    def status(self, message, delay=3000):
+    def status(self, message, delay=5000):
         if delay is not None:
             self.statusBar().showMessage(message, delay)
 
@@ -242,6 +255,22 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.scale = self.scaleFitWindow()
             self.canvas.adjustSize()
             self.canvas.update()
+
+    def setXMLDir(self):
+        curr_path = os.path.dirname(self.filename)\
+                if self.filename else '.'
+
+        dir_path = str(QFileDialog.getExistingDirectory(self,
+            '%s - Open Directory' % __appname__,  curr_path,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
+
+        if dir_path is not None and len(dir_path) > 1:
+            dir_path = dir_path.replace('\\', '/')
+            self.xmlDir = dir_path
+
+    def showInfo(self):
+        print(self.filename)
+        print(self.xmlDir)
 
     def openNextImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
@@ -292,6 +321,19 @@ class MainWindow(QMainWindow, WindowMixin):
     #     cp = QDesktopWidget().availableGeometry().center()
     #     qr.moveCenter(cp)
     #     self.move(qr.topLeft())
+
+    def testImg(self):
+        from shape import Shape
+        if len(self.canvas.shapes) < 1:
+            test_shape = Shape('test')
+            test_shape.points = [
+                QPoint(100, 100),
+                QPoint(100, 200),
+                QPoint(200, 200),
+                QPoint(200, 100),
+            ]
+            self.canvas.shapes.append(test_shape)
+        self.canvas.update()
 
 
 if __name__ == "__main__":

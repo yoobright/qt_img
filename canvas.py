@@ -60,6 +60,11 @@ class Canvas(QWidget):
         p.translate(self.offsetToCenter())
         # print(self.pixmap)
         p.drawPixmap(0, 0, self.pixmap)
+        Shape.scale = self.scale
+        for shape in self.shapes:
+            # print(self.shapes)
+            print("draw shape")
+            shape.paint(p)
         p.end()
 
     def isEditMode(self):
@@ -87,10 +92,15 @@ class Canvas(QWidget):
     def mouseMoveEvent(self, ev):
         # self.setCursor()
         pos = self.transformPos(ev.pos())
+        # inside pic
         if (0 < pos.x() < self.pixmap.width() and
             0 < pos.y() < self.pixmap.height()):
-            pos_str = "x: {}, y; {}".format(round(pos.x()), round(pos.y()))
-            self.mouseMoveSignal.emit(pos_str)
+            x = int(pos.x())
+            y = int(pos.y())
+            r, g, b = QColor(self.pixmap.toImage().pixel(x, y)).getRgb()[:-1]
+            status_str = u"x: {:<4d} y: {:<4d} rgb: {:<4d} {:<4d} {:<4d}"\
+                .format(x, y, r, g, b)
+            self.mouseMoveSignal.emit(status_str)
         if self.isDrawMode():
             self.setCursor(CURSOR_DRAW)
         #     self.overrideCursor(CURSOR_DRAW)
