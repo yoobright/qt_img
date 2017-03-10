@@ -260,6 +260,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.scale = self.scaleFitWindow()
             self.canvas.adjustSize()
             self.canvas.update()
+            self.curr_canvas_scale = self.canvas.scale
 
     def setXMLDir(self):
         curr_path = os.path.dirname(self.imgFname) \
@@ -297,6 +298,7 @@ class MainWindow(QMainWindow, WindowMixin):
         print("imageIdx: {}".format(self.imageIdx))
         print("xmlDir: {}".format(self.xmlDir))
         print("xmlFname: {}".format(self.xmlFname))
+        print("curr_canvas_scale: {}".format(self.curr_canvas_scale))
 
     def openNextImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
@@ -315,7 +317,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.loadXMLFile()
         self.imageIdx = nextIdx
 
-    def zoomRequest(self, delta):
+    def zoomRequest(self, delta, pos):
         units = delta / (8 * 15)
         scale = self.canvas.scale + units / 10
         if scale <= 0:
@@ -325,6 +327,21 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.scale = scale
             self.canvas.adjustSize()
             self.canvas.update()
+            ScrollbarPos = QPointF(self.scroll.horizontalScrollBar().value(),
+                                   self.scroll.verticalScrollBar().value())
+            DeltaToPos = (pos + QPointF(10, 10)) / self.curr_canvas_scale
+            Delta = DeltaToPos * self.canvas.scale - \
+                    DeltaToPos * self.curr_canvas_scale
+            self.scroll.horizontalScrollBar().setValue(ScrollbarPos.x() +
+                                                       Delta.x())
+            self.scroll.verticalScrollBar().setValue(ScrollbarPos.y() +
+                                                     Delta.y())
+            # print(self.scroll.horizontalScrollBar().value())
+            # print(pos)
+            # print(ScrollbarPos)
+            # print(self.scroll.pos())
+            # print(self.canvas.pos())
+            self.curr_canvas_scale = self.canvas.scale
 
     def openPrevImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):

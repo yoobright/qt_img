@@ -22,7 +22,7 @@ def read(filename, default=None):
 
 
 class Canvas(QWidget):
-    zoomRequest = pyqtSignal(int)
+    zoomRequest = pyqtSignal(int, QPointF)
     mouseMoveSignal = pyqtSignal(str)
 
     def __init__(self, *args, **kwargs):
@@ -154,7 +154,7 @@ class Canvas(QWidget):
             if Qt.ControlModifier == int(mods):
                 # print('zoom')
                 # print(ev.delta())
-                self.zoomRequest.emit(ev.delta())
+                self.zoomRequest.emit(ev.delta(), ev.pos())
                 # units = ev.delta() / (8 * 15)
                 # scale = 10
                 # self.scale += units * scale / 100
