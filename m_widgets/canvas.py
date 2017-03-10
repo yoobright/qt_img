@@ -73,11 +73,16 @@ class Canvas(QWidget):
 
     def paintPropShape(self, painter):
         color = QColor("#FFF68F")
-        color.setAlpha(180)
         pen = QPen()
-        pen.setColor(color)
-        pen.setWidth(1)
         for meta_shape in self.prop_meta_shapes:
+            if meta_shape['keep'] == 1:
+                color.setAlpha(255)
+                width = 2
+            else:
+                color.setAlpha(180)
+                width = 1
+            pen.setColor(color)
+            pen.setWidth(width)
             shape = meta_shape['shape']
             shape.paint(painter, pen=pen)
 

@@ -19,7 +19,7 @@ class Shape(object):
         if self.points:
             if pen is None:
                 color = self.line_color
-                color.setAlpha(220)
+                color.setAlpha(240)
                 pen = QPen()
                 pen.setColor(color)
                 pen.setWidth(max(1, int(round(2.0 / self.scale))))
