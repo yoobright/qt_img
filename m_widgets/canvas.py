@@ -107,6 +107,7 @@ class Canvas(QWidget):
 
     def mouseMoveEvent(self, ev):
         # self.setCursor()
+        # print(ev.pos())
         pos = self.transformPos(ev.pos())
         # inside pic
         if (0 < pos.x() < self.pixmap.width() and
@@ -153,14 +154,14 @@ class Canvas(QWidget):
             if Qt.ControlModifier == int(mods):
                 # print('zoom')
                 # print(ev.delta())
-                # self.zoomRequest.emit(ev.delta())
-                units = ev.delta() / (8 * 15)
-                scale = 10
-                self.scale += units * scale / 100
-                # print(self.scale)
-                self.adjustSize()
-                self.update()
-        ev.accept()
+                self.zoomRequest.emit(ev.delta())
+                # units = ev.delta() / (8 * 15)
+                # scale = 10
+                # self.scale += units * scale / 100
+                # # print(self.scale)
+                # self.adjustSize()
+                # self.update()
+        # ev.accept()
 
     def resetState(self):
         self.restoreCursor()

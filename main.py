@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+from __future__ import print_function, division
 
 import os
 import sys
@@ -124,10 +124,11 @@ class MainWindow(QMainWindow, WindowMixin):
         QWidget.__init__(self, parent)
         self.setWindowTitle(__appname__)
         self.resize(800, 600)
+        self.curr_canvas_scale = 1.0
 
         self.canvas = Canvas()
         self.canvas.setObjectName(_fromUtf8("canvas"))
-        # self.canvas.zoomRequest.connect(self.zoomRequest)
+        self.canvas.zoomRequest.connect(self.zoomRequest)
         self.canvas.mouseMoveSignal.connect(self.statusBar().showMessage)
 
         self.scroll = QScrollArea()
@@ -313,6 +314,17 @@ class MainWindow(QMainWindow, WindowMixin):
         self.loadFile(filename)
         self.loadXMLFile()
         self.imageIdx = nextIdx
+
+    def zoomRequest(self, delta):
+        units = delta / (8 * 15)
+        scale = self.canvas.scale + units / 10
+        if scale <= 0:
+            scale = 0.01
+
+        if self.canvas.pixmap:
+            self.canvas.scale = scale
+            self.canvas.adjustSize()
+            self.canvas.update()
 
     def openPrevImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
