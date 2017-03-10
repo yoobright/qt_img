@@ -15,13 +15,14 @@ class Shape(object):
         self.fill = False
         self.selected = False
 
-    def paint(self, painter):
+    def paint(self, painter, pen=None):
         if self.points:
-            color = self.line_color
-            color.setAlpha(200)
-            pen = QPen()
-            pen.setColor(color)
-            pen.setWidth(max(1, int(round(2.0 / self.scale))))
+            if pen is None:
+                color = self.line_color
+                color.setAlpha(220)
+                pen = QPen()
+                pen.setColor(color)
+                pen.setWidth(max(1, int(round(2.0 / self.scale))))
             painter.setPen(pen)
 
             line_path = QPainterPath()

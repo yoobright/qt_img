@@ -62,10 +62,26 @@ class Canvas(QWidget):
         # print(self.pixmap)
         p.drawPixmap(0, 0, self.pixmap)
         Shape.scale = self.scale
+        self.paintPropShape(p)
+        self.paintTrueShape(p)
+        p.end()
+
+    def paintTrueShape(self, painter):
         for meta_shape in self.true_meta_shapes:
             shape = meta_shape['shape']
-            shape.paint(p)
-        p.end()
+            shape.paint(painter)
+
+    def paintPropShape(self, painter):
+        color = QColor("#FFF68F")
+        color.setAlpha(180)
+        pen = QPen()
+        pen.setColor(color)
+        pen.setWidth(1)
+        for meta_shape in self.prop_meta_shapes:
+            shape = meta_shape['shape']
+            shape.paint(painter, pen=pen)
+
+
 
     def isEditMode(self):
         return self.mode == EDIT

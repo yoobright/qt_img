@@ -168,7 +168,7 @@ class MainWindow(QMainWindow, WindowMixin):
                              None, None, u'Test')
 
         # set tools
-        tool = [next_action, prev_action, draw_action, test_action]
+        tool = [prev_action, next_action, draw_action, test_action]
         addActions(self.tools, tool)
         # set menus
         self.menus = struct(file=self.menu('&File'),  view=self.menu('&View'),)
@@ -284,6 +284,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 self.xmlFname = xml_file
                 xml_file = xmlFile(self.xmlFname)
                 self.canvas.true_meta_shapes = xml_file.true_meta_shapes
+                self.canvas.prop_meta_shapes = xml_file.prop_meta_shapes
                 self.canvas.repaint()
             else:
                 self.status(u'can not find xml file', delay=3000)
