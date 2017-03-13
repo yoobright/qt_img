@@ -78,9 +78,11 @@ class Canvas(QWidget):
             if meta_shape['keep'] == 1:
                 color.setAlpha(255)
                 width = 2
+                pen.setStyle(Qt.SolidLine)
             else:
                 color.setAlpha(180)
                 width = 1
+                pen.setStyle(Qt.DotLine)
             pen.setColor(color)
             pen.setWidth(width)
             shape = meta_shape['shape']
@@ -122,7 +124,9 @@ class Canvas(QWidget):
             r, g, b = QColor(self.pixmap.toImage().pixel(x, y)).getRgb()[:-1]
             status_str = u"x: {:<4d} y: {:<4d} rgb: {:<4d} {:<4d} {:<4d}"\
                 .format(x, y, r, g, b)
-            self.mouseMoveSignal.emit(status_str)
+        else:
+            status_str = u""
+        self.mouseMoveSignal.emit(status_str)
 
         if self.isDrawMode():
             self.setCursor(CURSOR_DRAW)
