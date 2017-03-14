@@ -32,7 +32,11 @@ class xmlFile(object):
             shape.addPoint(QPoint(box['xmin'], box['ymax']))
             meta_shape = {
                 'shape': shape,
-                'name': box['name']
+                'name': box['name'],
+                'xmin': box['xmin'],
+                'ymin': box['ymin'],
+                'xmax': box['xmax'],
+                'ymax': box['ymax']
             }
             self.true_meta_shapes.append(meta_shape)
 
@@ -46,7 +50,11 @@ class xmlFile(object):
                 'shape': shape,
                 'name': box['name'],
                 'score': box['score'],
-                'keep': box['keep']
+                'keep': box['keep'],
+                'xmin': box['xmin'],
+                'ymin': box['ymin'],
+                'xmax': box['xmax'],
+                'ymax': box['ymax']
             }
             self.prop_meta_shapes.append(meta_shape)
 

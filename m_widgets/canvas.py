@@ -3,6 +3,7 @@ from __future__ import print_function, division
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from shape import Shape
+from io_utils.utils import compute_iou
 
 CURSOR_DEFAULT = Qt.ArrowCursor
 CURSOR_POINT = Qt.PointingHandCursor
@@ -37,6 +38,7 @@ class Canvas(QWidget):
         self.pixmap = QPixmap('test.jpg')
         self.scale = 1.0
         self.hShape = None
+        self.selectedShape = None
         # Set widget options
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.WheelFocus)
@@ -89,7 +91,8 @@ class Canvas(QWidget):
             pen.setColor(color)
             pen.setWidth(width)
             shape = meta_shape['shape']
-            if meta_shape == self.hShape and meta_shape['keep'] == 1:
+            if (meta_shape == self.hShape or shape.selected) and \
+                            meta_shape['keep'] == 1:
                 shape.fill = True
             else:
                 shape.fill = False
@@ -119,6 +122,12 @@ class Canvas(QWidget):
         self.restoreCursor()
         # print('focus')
 
+    def computeShapeIOU(self, meta_shape):
+        ret = 0.0
+        for true_meta_shape in self.true_meta_shapes:
+            ret = max(ret, compute_iou(meta_shape, true_meta_shape))
+        return ret
+
     def mouseMoveEvent(self, ev):
         # self.setCursor()
         # print(ev.pos())
@@ -139,15 +148,21 @@ class Canvas(QWidget):
             self.setCursor(CURSOR_DRAW)
         #     self.overrideCursor(CURSOR_DRAW)
         else:
-            tip = QToolTip
             self.setCursor(CURSOR_DEFAULT)
             for meta_shape in reversed([s for s in self.prop_meta_shapes]):
                 if meta_shape['shape'].containsPoint(pos) and \
                                 meta_shape['keep'] == 1:
                     self.hShape = meta_shape
-                    tip.showText(ev.globalPos(), u"shape '{}', score: {}".format(
-                        meta_shape['name'],
-                        meta_shape['score']))
+                    iou = self.computeShapeIOU(meta_shape)
+                    QToolTip.showText(
+                        ev.globalPos(),
+                        u"shape '{:}'\nscore: {:.4}\niou: {:.5}".format(
+                            meta_shape['name'],
+                            meta_shape['score'],
+                            iou
+                        )
+                    )
+
                     # self.setToolTip("shape '{}'".format(meta_shape['name']))
                     self.update()
                     break
@@ -155,9 +170,34 @@ class Canvas(QWidget):
             else:
                 if self.hShape:
                     # self.hShape.highlightClear()
-                    tip.hideText()
+                    QToolTip.hideText()
                     self.update()
+
                 self.hShape = None
+
+    def mousePressEvent(self, ev):
+        pos = self.transformPos(ev.pos())
+        if self.isDrawMode():
+            pass
+        else:
+            self.selectShapePoint(pos)
+            self.repaint()
+
+    def deSelectShape(self):
+        if self.selectedShape:
+            self.selectedShape.selected = False
+            self.selectedShape = None
+            self.update()
+
+    def selectShapePoint(self, point):
+        self.deSelectShape()
+        for meta_shape in reversed([s for s in self.prop_meta_shapes]):
+            if meta_shape['shape'].containsPoint(point) and \
+                                meta_shape['keep'] == 1:
+                meta_shape['shape'].selected = True
+                self.selectedShape = meta_shape['shape']
+                self.update()
+
 
 
     def loadPixmap(self, pixmap):

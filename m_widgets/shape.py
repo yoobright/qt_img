@@ -4,11 +4,13 @@ from PyQt4.QtCore import *
 
 GT_LINE_COLOR = QColor("#7FFF00")
 DEFAULT_FILL_COLOR = QColor(255, 0, 0, 100)
+DEFAULT_SELECT_FILL_COLOR = QColor(0, 128, 255, 155)
 
 
 class Shape(object):
     line_color = GT_LINE_COLOR
     fill_color = DEFAULT_FILL_COLOR
+    select_fill_color = DEFAULT_SELECT_FILL_COLOR
     scale = 1.0
 
     def __init__(self, name):
@@ -36,7 +38,7 @@ class Shape(object):
             painter.drawPath(line_path)
 
             if self.fill:
-                color = self.fill_color
+                color = self.select_fill_color if self.selected else self.fill_color
                 painter.fillPath(line_path, color)
 
     def containsPoint(self, point):

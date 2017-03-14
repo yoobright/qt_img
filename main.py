@@ -393,7 +393,11 @@ class MainWindow(QMainWindow, WindowMixin):
                 'shape': test_shape,
                 'keep': 1,
                 'name': 'test',
-                'score': 0.9
+                'score': 0.9,
+                'xmin': 100,
+                'ymin': 100,
+                'xmax': 200,
+                'ymax': 200
             }
             self.canvas.prop_meta_shapes.append(meta_shape)
         self.canvas.update()
