@@ -287,7 +287,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 xml_file = xmlFile(self.xmlFname)
                 self.canvas.true_meta_shapes = xml_file.true_meta_shapes
                 self.canvas.prop_meta_shapes = xml_file.prop_meta_shapes
-                self.canvas.repaint()
+                self.canvas.update()
             else:
                 self.status(u'can not find xml file', delay=3000)
 
@@ -380,7 +380,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def testImg(self):
         from m_widgets.shape import Shape
-        if len(self.canvas.true_meta_shapes) < 1:
+        # if len(self.canvas.true_meta_shapes) < 1:
+        if 1:
             test_shape = Shape('test')
             test_shape.points = [
                 QPoint(100, 100),
@@ -389,9 +390,12 @@ class MainWindow(QMainWindow, WindowMixin):
                 QPoint(200, 100),
             ]
             meta_shape = {
-                'shape': test_shape
+                'shape': test_shape,
+                'keep': 1,
+                'name': 'test',
+                'score': 0.9
             }
-            self.canvas.true_meta_shapes.append(meta_shape)
+            self.canvas.prop_meta_shapes.append(meta_shape)
         self.canvas.update()
 
 

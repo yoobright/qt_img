@@ -25,6 +25,8 @@ class Canvas(QWidget):
     zoomRequest = pyqtSignal(int, QPointF)
     mouseMoveSignal = pyqtSignal(str)
 
+    epsilon = 11.0
+
     def __init__(self, *args, **kwargs):
         super(Canvas, self).__init__(*args, **kwargs)
         self.mode = EDIT
@@ -34,6 +36,7 @@ class Canvas(QWidget):
         self._painter = QPainter()
         self.pixmap = QPixmap('test.jpg')
         self.scale = 1.0
+        self.hShape = None
         # Set widget options
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.WheelFocus)
@@ -50,7 +53,7 @@ class Canvas(QWidget):
         y = (ah-h)/(2*s) if ah > h else 0
         return QPointF(x, y)
 
-    def paintEvent(self, QPaintEvent):
+    def paintEvent(self, ev):
         p = self._painter
         p.begin(self)
         p.setRenderHint(QPainter.Antialiasing)
@@ -86,6 +89,10 @@ class Canvas(QWidget):
             pen.setColor(color)
             pen.setWidth(width)
             shape = meta_shape['shape']
+            if meta_shape == self.hShape and meta_shape['keep'] == 1:
+                shape.fill = True
+            else:
+                shape.fill = False
             shape.paint(painter, pen=pen)
 
 
@@ -132,7 +139,26 @@ class Canvas(QWidget):
             self.setCursor(CURSOR_DRAW)
         #     self.overrideCursor(CURSOR_DRAW)
         else:
+            tip = QToolTip
             self.setCursor(CURSOR_DEFAULT)
+            for meta_shape in reversed([s for s in self.prop_meta_shapes]):
+                if meta_shape['shape'].containsPoint(pos) and \
+                                meta_shape['keep'] == 1:
+                    self.hShape = meta_shape
+                    tip.showText(ev.globalPos(), u"shape '{}', score: {}".format(
+                        meta_shape['name'],
+                        meta_shape['score']))
+                    # self.setToolTip("shape '{}'".format(meta_shape['name']))
+                    self.update()
+                    break
+            # not found
+            else:
+                if self.hShape:
+                    # self.hShape.highlightClear()
+                    tip.hideText()
+                    self.update()
+                self.hShape = None
+
 
     def loadPixmap(self, pixmap):
         self.pixmap = pixmap

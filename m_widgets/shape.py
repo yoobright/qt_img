@@ -3,10 +3,12 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
 GT_LINE_COLOR = QColor("#7FFF00")
+DEFAULT_FILL_COLOR = QColor(255, 0, 0, 100)
 
 
 class Shape(object):
     line_color = GT_LINE_COLOR
+    fill_color = DEFAULT_FILL_COLOR
     scale = 1.0
 
     def __init__(self, name):
@@ -32,6 +34,19 @@ class Shape(object):
                 line_path.lineTo(p)
             line_path.lineTo(self.points[0])
             painter.drawPath(line_path)
+
+            if self.fill:
+                color = self.fill_color
+                painter.fillPath(line_path, color)
+
+    def containsPoint(self, point):
+        return self.makePath().contains(point)
+
+    def makePath(self):
+        path = QPainterPath(self.points[0])
+        for p in self.points[1:]:
+            path.lineTo(p)
+        return path
 
     def addPoint(self, point):
             self.points.append(point)
