@@ -13,7 +13,7 @@ class Shape(object):
     select_fill_color = DEFAULT_SELECT_FILL_COLOR
     scale = 1.0
 
-    def __init__(self, name):
+    def __init__(self, name=None):
         self.name = name
         self.points = []
         self.fill = False
@@ -52,3 +52,13 @@ class Shape(object):
 
     def addPoint(self, point):
             self.points.append(point)
+
+    # def __len__(self):
+    #     return len(self.points)
+    #
+    # def __getitem__(self, key):
+    #     return self.points[key]
+    #
+    # def __setitem__(self, key, value):
+    #     self.points[key] = value
+

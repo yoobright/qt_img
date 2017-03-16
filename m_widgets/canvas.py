@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division
+from math import sqrt
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from shape import Shape
@@ -21,10 +22,13 @@ def read(filename, default=None):
     except:
         return default
 
+def distance(p):
+    return sqrt(p.x() * p.x() + p.y() * p.y())
 
 class Canvas(QWidget):
     zoomRequest = pyqtSignal(int, QPointF)
     mouseMoveSignal = pyqtSignal(str)
+    newShape = pyqtSignal()
 
     epsilon = 11.0
 
@@ -33,12 +37,15 @@ class Canvas(QWidget):
         self.mode = EDIT
         self.true_meta_shapes = []
         self.prop_meta_shapes = []
+        self.current_shape = None
+        self.rect_points = None
         self._cursor = CURSOR_DEFAULT
         self._painter = QPainter()
         self.pixmap = QPixmap('test.jpg')
         self.scale = 1.0
         self.hShape = None
         self.selectedShape = None
+        self.menus = QMenu()
         # Set widget options
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.WheelFocus)
@@ -55,6 +62,58 @@ class Canvas(QWidget):
         y = (ah-h)/(2*s) if ah > h else 0
         return QPointF(x, y)
 
+    def outOfPixmap(self, p):
+        w, h = self.pixmap.width(), self.pixmap.height()
+        return not (0 <= p.x() <= w and 0 <= p.y() <= h)
+
+    def intersectionPoint(self, p1, p2):
+        # Cycle through each image edge in clockwise fashion,
+        # and find the one intersecting the current line segment.
+        # http://paulbourke.net/geometry/lineline2d/
+        size = self.pixmap.size()
+        points = [(0,0),
+                  (size.width(), 0),
+                  (size.width(), size.height()),
+                  (0, size.height())]
+        x1, y1 = p1.x(), p1.y()
+        x2, y2 = p2.x(), p2.y()
+        d, i, (x, y) = min(self.intersectingEdges((x1, y1), (x2, y2), points))
+        x3, y3 = points[i]
+        x4, y4 = points[(i+1)%4]
+        if (x, y) == (x1, y1):
+            # Handle cases where previous point is on one of the edges.
+            if x3 == x4:
+                return QPointF(x3, min(max(0, y2), max(y3, y4)))
+            else: # y3 == y4
+                return QPointF(min(max(0, x2), max(x3, x4)), y3)
+        return QPointF(x, y)
+
+    def intersectingEdges(self, x1y1, x2y2, points):
+        """For each edge formed by `points', yield the intersection
+        with the line segment `(x1,y1) - (x2,y2)`, if it exists.
+        Also return the distance of `(x2,y2)' to the middle of the
+        edge along with its index, so that the one closest can be chosen."""
+        x1, y1 = x1y1
+        x2, y2 = x2y2
+        for i in range(4):
+            x3, y3 = points[i]
+            x4, y4 = points[(i+1) % 4]
+            denom = (y4-y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
+            nua = (x4-x3) * (y1-y3) - (y4-y3) * (x1-x3)
+            nub = (x2-x1) * (y1-y3) - (y2-y1) * (x1-x3)
+            if denom == 0:
+                # This covers two cases:
+                #   nua == nub == 0: Coincident
+                #   otherwise: Parallel
+                continue
+            ua, ub = nua / denom, nub / denom
+            if 0 <= ua <= 1 and 0 <= ub <= 1:
+                x = x1 + ua * (x2 - x1)
+                y = y1 + ua * (y2 - y1)
+                m = QPointF((x3 + x4)/2, (y3 + y4)/2)
+                d = distance(m - QPointF(x2, y2))
+                yield d, i, (x, y)
+
     def paintEvent(self, ev):
         p = self._painter
         p.begin(self)
@@ -69,6 +128,8 @@ class Canvas(QWidget):
         Shape.scale = self.scale
         self.paintPropShape(p)
         self.paintTrueShape(p)
+        if self.current_shape:
+            self.paintRect(p)
         p.end()
 
     def paintTrueShape(self, painter):
@@ -98,7 +159,17 @@ class Canvas(QWidget):
                 shape.fill = False
             shape.paint(painter, pen=pen)
 
-
+    def paintRect(self, painter):
+        leftTop = self.rect_points[0]
+        rightBottom = self.rect_points[1]
+        rectWidth = rightBottom.x() - leftTop.x()
+        rectHeight = rightBottom.y() - leftTop.y()
+        color = QColor(127, 255, 0)
+        painter.setPen(color)
+        brush = QBrush(Qt.BDiagPattern)
+        brush.setColor(QColor(127, 255, 0, 120))
+        painter.setBrush(brush)
+        painter.drawRect(leftTop.x(), leftTop.y(), rectWidth, rectHeight)
 
     def isEditMode(self):
         return self.mode == EDIT
@@ -133,8 +204,7 @@ class Canvas(QWidget):
         # print(ev.pos())
         pos = self.transformPos(ev.pos())
         # inside pic
-        if (0 < pos.x() < self.pixmap.width() and
-            0 < pos.y() < self.pixmap.height()):
+        if not self.outOfPixmap(pos):
             x = int(pos.x())
             y = int(pos.y())
             r, g, b = QColor(self.pixmap.toImage().pixel(x, y)).getRgb()[:-1]
@@ -147,6 +217,16 @@ class Canvas(QWidget):
         if self.isDrawMode():
             self.setCursor(CURSOR_DRAW)
         #     self.overrideCursor(CURSOR_DRAW)
+            if self.current_shape and Qt.LeftButton & ev.buttons():
+                if self.outOfPixmap(pos):
+                    pos = self.intersectionPoint(self.rect_points[0], pos)
+                if pos.x() - self.rect_points[0].x() > 0 and \
+                    pos.y() - self.rect_points[0].y() > 0:
+                    self.rect_points[-1] = pos
+                    self.update()
+            return
+
+
         else:
             self.setCursor(CURSOR_DEFAULT)
             for meta_shape in reversed([s for s in self.prop_meta_shapes]):
@@ -178,10 +258,49 @@ class Canvas(QWidget):
     def mousePressEvent(self, ev):
         pos = self.transformPos(ev.pos())
         if self.isDrawMode():
-            pass
+            if self.current_shape:
+                pass
+            elif not self.outOfPixmap(pos):
+                self.current_shape = Shape()
+                # self.current_shape.addPoint(pos)
+                self.rect_points = [pos, pos]
         else:
             self.selectShapePoint(pos)
             self.repaint()
+
+    def mouseReleaseEvent(self, ev):
+        if ev.button() == Qt.RightButton:
+            self.restoreCursor()
+            self.menus.exec_(ev.globalPos())
+
+        if ev.button() == Qt.LeftButton:
+            if self.current_shape:
+                self.newShape.emit()
+                self.rect_points = None
+                self.current_shape = None
+                print('draw done')
+                self.repaint()
+
+    def addTrueShape(self):
+        if self.current_shape and self.rect_points:
+            xmin = int(self.rect_points[0].x())
+            ymin = int(self.rect_points[0].y())
+            xmax = int(self.rect_points[1].x())
+            ymax = int(self.rect_points[1].y())
+            name = self.current_shape.name
+            self.current_shape.addPoint(QPoint(xmin, ymin))
+            self.current_shape.addPoint(QPoint(xmax, ymin))
+            self.current_shape.addPoint(QPoint(xmax, ymax))
+            self.current_shape.addPoint(QPoint(xmin, ymax))
+            meta_shape = {
+                'shape': self.current_shape,
+                'name': name,
+                'xmin': xmin,
+                'ymin': ymin,
+                'xmax': xmax,
+                'ymax': ymax
+            }
+            self.true_meta_shapes.append(meta_shape)
 
     def deSelectShape(self):
         if self.selectedShape:
@@ -197,6 +316,7 @@ class Canvas(QWidget):
                 meta_shape['shape'].selected = True
                 self.selectedShape = meta_shape['shape']
                 self.update()
+                return
 
 
 
@@ -209,8 +329,6 @@ class Canvas(QWidget):
         self.restoreCursor()
         self._cursor = cursor
         QApplication.setOverrideCursor(cursor)
-
-
 
     def restoreCursor(self):
         QApplication.restoreOverrideCursor()

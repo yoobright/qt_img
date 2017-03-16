@@ -8,6 +8,7 @@ from functools import partial
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from m_widgets.canvas import Canvas
+from m_widgets.labelDialog import LabelDialog
 from io_utils.xmlFile import xmlFile
 
 try:
@@ -130,6 +131,10 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.setObjectName(_fromUtf8("canvas"))
         self.canvas.zoomRequest.connect(self.zoomRequest)
         self.canvas.mouseMoveSignal.connect(self.statusBar().showMessage)
+        self.canvas.newShape.connect(self.newShape)
+
+        self.labelDialog = LabelDialog(parent=self, listItem=['head', 'person'])
+        self.labelDialog.setWindowTitle('label')
 
         self.scroll = QScrollArea()
         self.scroll.setWidget(self.canvas)
@@ -160,6 +165,7 @@ class MainWindow(QMainWindow, WindowMixin):
         # toolbar action
         draw_action = action('&Draw', self.draw,
                              None, None, u'Draw')
+        draw_action.setCheckable(True)
         next_action = action('&Next', self.openNextImg,
                              None, None, u'Open Next')
         prev_action = action('&Prev', self.openPrevImg,
@@ -167,16 +173,38 @@ class MainWindow(QMainWindow, WindowMixin):
 
         test_action = action('&Test', self.testImg,
                              None, None, u'Test')
+        # box action
+        set_true_action = action('Set True Box', self.setTrue,
+                                 None, None, u'Set True Box')
+        set_error_action = action('Set Error Box', self.setTrue,
+                                 None, None, u'Set Error Box')
 
+        # store actions for further handling.
+        self.actions = struct(
+            open=open_action,
+            quit=quit_action,
+            set_anno=set_anno_action,
+            fit=fit_action,
+            info=info_action,
+            draw=draw_action,
+            next=next_action,
+            prev=prev_action,
+            set_true=set_true_action,
+            set_error=set_error_action
+        )
         # set tools
         tool = [prev_action, next_action, draw_action, test_action]
         addActions(self.tools, tool)
-        # set menus
-        self.menus = struct(file=self.menu('&File'),  view=self.menu('&View'),)
+        # set menus action
+        self.menus = struct(file=self.menu('&File'),  view=self.menu('&View'),
+                            edit=self.menu('&Edit'))
         addActions(self.menus.file, (open_action, set_anno_action,
                                      None, quit_action))
         addActions(self.menus.view, (fit_action,))
+        addActions(self.menus.edit, (set_true_action, set_error_action))
         self.menuBar().addAction(info_action)
+        # set canvas action
+        addActions(self.canvas.menus, (set_true_action, set_error_action))
 
     def scanAllImages(self, folderPath):
         extensions = ['.jpeg','.jpg', '.png', '.bmp']
@@ -241,8 +269,10 @@ class MainWindow(QMainWindow, WindowMixin):
             self.imageData = read(filename, None)
             image = QImage.fromData(self.imageData)
             if image.isNull():
-                self.errorMessage(u'Error opening file',
-                        u"<p>Make sure <i>%s</i> is a valid image file." % filename)
+                self.errorMessage(
+                    u'Error opening file',
+                    u"<p>Make sure <i>%s</i> is a valid image file." %
+                    filename)
                 self.status("Error reading %s" % filename)
                 return False
             self.canvas.loadPixmap(QPixmap.fromImage(image))
@@ -251,6 +281,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.adjustSize()
             self.canvas.update()
             self.canvas.setMode('edit')
+            self.actions.draw.setChecked(False)
             self.imgFname = u(filename)
             return True
         return False
@@ -317,6 +348,23 @@ class MainWindow(QMainWindow, WindowMixin):
         self.loadXMLFile()
         self.imageIdx = nextIdx
 
+    def openPrevImg(self):
+        if (self.imageList is None) or (len(self.imageList) <= 0):
+            return
+
+        filename = None
+        if self.imageIdx - 1 >= 0:
+            prevIdx = self.imageIdx - 1
+        elif self.imageIdx - 1 == -1:
+            prevIdx = len(self.imageList) - 1
+        else:
+            return
+
+        filename = self.imageList[prevIdx]
+        self.loadFile(filename)
+        self.loadXMLFile()
+        self.imageIdx = prevIdx
+
     def zoomRequest(self, delta, pos):
         units = delta / (8 * 15)
         scale = self.canvas.scale + units / 10
@@ -343,22 +391,12 @@ class MainWindow(QMainWindow, WindowMixin):
             # print(self.canvas.pos())
             self.curr_canvas_scale = self.canvas.scale
 
-    def openPrevImg(self):
-        if (self.imageList is None) or (len(self.imageList) <= 0):
-            return
 
-        filename = None
-        if self.imageIdx - 1 >= 0:
-            prevIdx = self.imageIdx - 1
-        elif self.imageIdx - 1 == -1:
-            prevIdx = len(self.imageList) - 1
-        else:
-            return
-
-        filename = self.imageList[prevIdx]
-        self.loadFile(filename)
-        self.loadXMLFile()
-        self.imageIdx = prevIdx
+    def newShape(self):
+        text = self.labelDialog.popUp()
+        if text is not None:
+            self.canvas.current_shape.name = str(text)
+            self.canvas.addTrueShape()
 
     def draw(self):
         if self.canvas.isEditMode():
@@ -366,6 +404,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.status("draw mode")
         else:
             self.canvas.setMode('edit')
+            self.status("edit mode")
 
         # def zoomRequest(self, delta):
         #     units = delta / (8 * 15)
@@ -377,6 +416,12 @@ class MainWindow(QMainWindow, WindowMixin):
     #     cp = QDesktopWidget().availableGeometry().center()
     #     qr.moveCenter(cp)
     #     self.move(qr.topLeft())
+
+    def setTrue(self):
+        pass
+
+    def setError(self):
+        pass
 
     def testImg(self):
         from m_widgets.shape import Shape
