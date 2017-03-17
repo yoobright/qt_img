@@ -170,7 +170,8 @@ class MainWindow(QMainWindow, WindowMixin):
                              None, None, u'Open Next')
         prev_action = action('&Prev', self.openPrevImg,
                              None, None, u'Open Prev')
-
+        save_action = action('&Save', self.saveLabel,
+                             'Ctrl+S', None, u'Save Label')
         test_action = action('&Test', self.testImg,
                              None, None, u'Test')
         # box action
@@ -193,7 +194,7 @@ class MainWindow(QMainWindow, WindowMixin):
             set_error=set_error_action
         )
         # set tools
-        tool = [prev_action, next_action, draw_action, test_action]
+        tool = [prev_action, next_action, draw_action, save_action, test_action]
         addActions(self.tools, tool)
         # set menus action
         self.menus = struct(file=self.menu('&File'),  view=self.menu('&View'),
@@ -364,6 +365,20 @@ class MainWindow(QMainWindow, WindowMixin):
         self.loadFile(filename)
         self.loadXMLFile()
         self.imageIdx = prevIdx
+
+    def saveLabel(self):
+        if self.imgFname:
+            curr_path = os.path.dirname(self.imgFname) \
+                if self.imgFname else '.'
+            dir_path = str(QFileDialog.getExistingDirectory(self,
+            '%s - Open Directory' % __appname__,  curr_path,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
+
+            if dir_path is not None and len(dir_path) > 1:
+                dir_path = dir_path.replace('\\', '/')
+                img_name = os.path.basename(self.imgFname)
+                self.canvas.saveXMl(img_name, dir_path)
+
 
     def zoomRequest(self, delta, pos):
         units = delta / (8 * 15)

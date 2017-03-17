@@ -144,19 +144,21 @@ class NewWriter:
 
     def save(self, dir=None, targetFile=None,):
         root = self.genXML()
-        self.appendObjects(root)
-        out_file = None
-        if targetFile is None:
-            targetFile = self.filename + '.xml'
-        if dir:
-            if not os.path.exists(dir):
-                os.mkdir(dir)
-            targetFile = os.path.join(dir, targetFile)
-        out_file = codecs.open(targetFile, 'w', encoding='utf-8')
-        prettifyResult = self.prettify(root)
-        out_file.write(prettifyResult.decode('utf8'))
-        out_file.close()
-        return True
+        if root is not None:
+            self.appendObjects(root)
+            out_file = None
+            if targetFile is None:
+                targetFile = self.filename + '.xml'
+            if dir:
+                if not os.path.exists(dir):
+                    os.mkdir(dir)
+                targetFile = os.path.join(dir, targetFile)
+            out_file = codecs.open(targetFile, 'w', encoding='utf-8')
+            prettifyResult = self.prettify(root)
+            out_file.write(prettifyResult.decode('utf8'))
+            out_file.close()
+            return True
+        else: False
 
 
 def get_points(bndbox):

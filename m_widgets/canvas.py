@@ -4,6 +4,7 @@ from math import sqrt
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from shape import Shape
+from io_utils.m_io import NewWriter
 from io_utils.utils import compute_iou
 
 CURSOR_DEFAULT = Qt.ArrowCursor
@@ -322,7 +323,8 @@ class Canvas(QWidget):
 
     def loadPixmap(self, pixmap):
         self.pixmap = pixmap
-        self.true_shapes = []
+        self.true_meta_shapes = []
+        self.prop_meta_shapes = []
         self.repaint()
 
     def overrideCursor(self, cursor):
@@ -360,5 +362,17 @@ class Canvas(QWidget):
         self.restoreCursor()
         self.pixmap = None
         self.update()
+
+    def saveXMl(self, img_name=None, dir_path=None):
+        if dir:
+            img_size = (self.pixmap.height(), self.pixmap.width(), 3)
+            writer = NewWriter(img_name, img_size)
+
+            for meta_shape in self.true_meta_shapes:
+                writer.addTrueBox(meta_shape['xmin'], meta_shape['ymin'],
+                                  meta_shape['xmax'], meta_shape['ymax'],
+                                  meta_shape['name'])
+            writer.save(dir_path)
+
 
 
