@@ -44,7 +44,8 @@ class Canvas(QWidget):
         self._painter = QPainter()
         self.pixmap = QPixmap('test.jpg')
         self.scale = 1.0
-        self.hShape = None
+        self.hpShape = None
+        self.htShape = None
         self.selectedShape = None
         self.menus = QMenu()
         # Set widget options
@@ -136,6 +137,10 @@ class Canvas(QWidget):
     def paintTrueShape(self, painter):
         for meta_shape in self.true_meta_shapes:
             shape = meta_shape['shape']
+            if (meta_shape == self.htShape or shape.selected):
+                shape.fill = True
+            else:
+                shape.fill = False
             shape.paint(painter)
 
     def paintPropShape(self, painter):
@@ -153,7 +158,7 @@ class Canvas(QWidget):
             pen.setColor(color)
             pen.setWidth(width)
             shape = meta_shape['shape']
-            if (meta_shape == self.hShape or shape.selected) and \
+            if (meta_shape == self.hpShape or shape.selected) and \
                             meta_shape['keep'] == 1:
                 shape.fill = True
             else:
@@ -226,14 +231,12 @@ class Canvas(QWidget):
                     self.rect_points[-1] = pos
                     self.update()
             return
-
-
         else:
             self.setCursor(CURSOR_DEFAULT)
             for meta_shape in reversed([s for s in self.prop_meta_shapes]):
                 if meta_shape['shape'].containsPoint(pos) and \
                                 meta_shape['keep'] == 1:
-                    self.hShape = meta_shape
+                    self.hpShape = meta_shape
                     iou = self.computeShapeIOU(meta_shape)
                     QToolTip.showText(
                         ev.globalPos(),
@@ -243,18 +246,26 @@ class Canvas(QWidget):
                             iou
                         )
                     )
-
-                    # self.setToolTip("shape '{}'".format(meta_shape['name']))
                     self.update()
                     break
             # not found
             else:
-                if self.hShape:
+                if self.hpShape:
                     # self.hShape.highlightClear()
                     QToolTip.hideText()
                     self.update()
+                self.hpShape = None
 
-                self.hShape = None
+            for meta_shape in reversed([s for s in self.true_meta_shapes]):
+                if meta_shape['shape'].containsPoint(pos):
+                    self.htShape = meta_shape
+                    self.hpShape = None
+                    self.update()
+                    break
+            else:
+                self.update()
+                self.htShape = None
+
 
     def mousePressEvent(self, ev):
         pos = self.transformPos(ev.pos())
