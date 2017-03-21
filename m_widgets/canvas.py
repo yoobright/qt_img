@@ -36,6 +36,7 @@ class Canvas(QWidget):
     def __init__(self, *args, **kwargs):
         super(Canvas, self).__init__(*args, **kwargs)
         self.mode = EDIT
+        self.keep_only = True
         self.true_meta_shapes = []
         self.prop_meta_shapes = []
         self.current_shape = None
@@ -163,7 +164,11 @@ class Canvas(QWidget):
                 shape.fill = True
             else:
                 shape.fill = False
-            shape.paint(painter, pen=pen)
+            if self.keep_only:
+                if meta_shape['keep'] == 1:
+                    shape.paint(painter, pen=pen)
+            else:
+                shape.paint(painter, pen=pen)
 
     def paintRect(self, painter):
         leftTop = self.rect_points[0]
@@ -238,21 +243,22 @@ class Canvas(QWidget):
                                 meta_shape['keep'] == 1:
                     self.hpShape = meta_shape
                     iou = self.computeShapeIOU(meta_shape)
-                    QToolTip.showText(
-                        ev.globalPos(),
-                        u"shape '{:}'\nscore: {:.4}\niou: {:.5}".format(
-                            meta_shape['name'],
-                            meta_shape['score'],
-                            iou
-                        )
-                    )
+                    # self.setToolTip()
+                    # QToolTip.showText(
+                    #     ev.globalPos(),
+                    #     u"shape '{:}'\nscore: {:.4}\niou: {:.5}".format(
+                    #         meta_shape['name'],
+                    #         meta_shape['score'],
+                    #         iou
+                    #     )
+                    # )
                     self.update()
                     break
             # not found
             else:
                 if self.hpShape:
                     # self.hShape.highlightClear()
-                    QToolTip.hideText()
+                    # QToolTip.hideText()
                     self.update()
                 self.hpShape = None
 
@@ -328,8 +334,15 @@ class Canvas(QWidget):
                 meta_shape['shape'].selected = True
                 self.selectedShape = meta_shape['shape']
                 self.update()
-                return
+                break
 
+        for meta_shape in reversed([s for s in self.true_meta_shapes]):
+            if meta_shape['shape'].containsPoint(point):
+                self.deSelectShape()
+                meta_shape['shape'].selected = True
+                self.selectedShape = meta_shape['shape']
+                self.update()
+                break
 
 
     def loadPixmap(self, pixmap):
