@@ -13,11 +13,16 @@ class Shape(object):
     select_fill_color = DEFAULT_SELECT_FILL_COLOR
     scale = 1.0
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, b_type=None):
         self.name = name
+        self.xmin = None
+        self.ymin = None
+        self.xmax = None
+        self.ymax = None
         self.points = []
         self.fill = False
         self.selected = False
+        self.b_type = b_type
 
     def paint(self, painter, pen=None):
         if self.points:
@@ -43,6 +48,38 @@ class Shape(object):
 
     def containsPoint(self, point):
         return self.makePath().contains(point)
+
+    def nearTop(self, point):
+        if (self.points[0].x() < point.x() < self.points[1].x()) and \
+                (abs(self.points[0].y() - point.y()) < 2):
+            return True
+        return False
+
+    def nearBottom(self, point):
+        if (self.points[3].x() < point.x() < self.points[2].x()) and \
+                (abs(self.points[2].y() - point.y()) < 2):
+            return True
+        return False
+
+    def nearLeft(self, point):
+        if (self.points[0].y() < point.y() < self.points[3].y()) and \
+                (abs(self.points[0].x() - point.x()) < 2):
+            return True
+        return False
+
+    def nearRight(self, point):
+        if (self.points[1].y() < point.y() < self.points[2].y()) and \
+                (abs(self.points[1].x() - point.x()) < 2):
+            return True
+        return False
+
+    def nearShape(self, point):
+        if (self.points[0].x() - 2 < point.x() < self.points[2].x() + 2) and \
+            (self.points[0].y() - 2 < point.y() < self.points[2].y() + 2):
+            return True
+        return False
+
+
 
     def makePath(self):
         path = QPainterPath(self.points[0])

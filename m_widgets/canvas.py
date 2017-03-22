@@ -12,6 +12,8 @@ CURSOR_POINT = Qt.PointingHandCursor
 CURSOR_DRAW = Qt.CrossCursor
 CURSOR_MOVE = Qt.ClosedHandCursor
 CURSOR_GRAB = Qt.OpenHandCursor
+CURSOR_SIZE_V = Qt.SizeVerCursor
+CURSOR_SIZE_H = Qt.SizeHorCursor
 
 EDIT, DRAW = 1, 2
 
@@ -25,6 +27,7 @@ def read(filename, default=None):
 
 def distance(p):
     return sqrt(p.x() * p.x() + p.y() * p.y())
+
 
 class Canvas(QWidget):
     zoomRequest = pyqtSignal(int, QPointF)
@@ -74,7 +77,7 @@ class Canvas(QWidget):
         # and find the one intersecting the current line segment.
         # http://paulbourke.net/geometry/lineline2d/
         size = self.pixmap.size()
-        points = [(0,0),
+        points = [(0, 0),
                   (size.width(), 0),
                   (size.width(), size.height()),
                   (0, size.height())]
@@ -226,6 +229,7 @@ class Canvas(QWidget):
         self.mouseMoveSignal.emit(status_str)
 
         if self.isDrawMode():
+            # draw mode
             self.setCursor(CURSOR_DRAW)
         #     self.overrideCursor(CURSOR_DRAW)
             if self.current_shape and Qt.LeftButton & ev.buttons():
@@ -237,28 +241,16 @@ class Canvas(QWidget):
                     self.update()
             return
         else:
+            # edit mode
             self.setCursor(CURSOR_DEFAULT)
             for meta_shape in reversed([s for s in self.prop_meta_shapes]):
                 if meta_shape['shape'].containsPoint(pos) and \
                                 meta_shape['keep'] == 1:
                     self.hpShape = meta_shape
-                    iou = self.computeShapeIOU(meta_shape)
-                    # self.setToolTip()
-                    # QToolTip.showText(
-                    #     ev.globalPos(),
-                    #     u"shape '{:}'\nscore: {:.4}\niou: {:.5}".format(
-                    #         meta_shape['name'],
-                    #         meta_shape['score'],
-                    #         iou
-                    #     )
-                    # )
                     self.update()
                     break
-            # not found
             else:
                 if self.hpShape:
-                    # self.hShape.highlightClear()
-                    # QToolTip.hideText()
                     self.update()
                 self.hpShape = None
 
@@ -271,6 +263,19 @@ class Canvas(QWidget):
             else:
                 self.update()
                 self.htShape = None
+
+            if self.selectedShape:
+                if self.selectedShape.nearTop(pos):
+                    self.setCursor(CURSOR_SIZE_V)
+                    if Qt.LeftButton & ev.buttons():
+                        print(pos)
+                elif self.selectedShape.nearBottom(pos):
+                    self.setCursor(CURSOR_SIZE_V)
+                elif self.selectedShape.nearLeft(pos):
+                    self.setCursor(CURSOR_SIZE_H)
+                elif self.selectedShape.nearRight(pos):
+                    self.setCursor(CURSOR_SIZE_H)
+
 
 
     def mousePressEvent(self, ev):
@@ -307,6 +312,7 @@ class Canvas(QWidget):
             xmax = int(self.rect_points[1].x())
             ymax = int(self.rect_points[1].y())
             name = self.current_shape.name
+            self.current_shape.b_type = 'true'
             self.current_shape.addPoint(QPoint(xmin, ymin))
             self.current_shape.addPoint(QPoint(xmax, ymin))
             self.current_shape.addPoint(QPoint(xmax, ymax))
@@ -338,7 +344,7 @@ class Canvas(QWidget):
                 break
 
         for meta_shape in reversed([s for s in self.true_meta_shapes]):
-            if meta_shape['shape'].containsPoint(point):
+            if meta_shape['shape'].nearShape(point):
                 self.deSelectShape()
                 meta_shape['shape'].selected = True
                 self.selectedShape = meta_shape['shape']

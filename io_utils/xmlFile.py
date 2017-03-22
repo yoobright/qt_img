@@ -25,7 +25,7 @@ class xmlFile(object):
 
     def covert_shape(self):
         for box in self.reader.true_boxlist:
-            shape = Shape(box['name'])
+            shape = Shape(box['name'], b_type='true')
             shape.addPoint(QPoint(box['xmin'], box['ymin']))
             shape.addPoint(QPoint(box['xmax'], box['ymin']))
             shape.addPoint(QPoint(box['xmax'], box['ymax']))
@@ -41,7 +41,7 @@ class xmlFile(object):
             self.true_meta_shapes.append(meta_shape)
 
         for box in self.reader.prop_boxlist:
-            shape = Shape(box['name'])
+            shape = Shape(box['name'], b_type='prop')
             shape.addPoint(QPoint(box['xmin'], box['ymin']))
             shape.addPoint(QPoint(box['xmax'], box['ymin']))
             shape.addPoint(QPoint(box['xmax'], box['ymax']))
