@@ -17,6 +17,11 @@ CURSOR_SIZE_H = Qt.SizeHorCursor
 
 EDIT, DRAW = 1, 2
 
+RESIZE_TOP = 0
+RESIZE_BOTTOM = 1
+RESIZE_LEFT = 2
+RESIZE_RIGHT = 3
+
 
 def read(filename, default=None):
     try:
@@ -52,6 +57,7 @@ class Canvas(QWidget):
         self.htShape = None
         self.selectedShape = None
         self.menus = QMenu()
+        self.resize_tag = None
         # Set widget options
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.WheelFocus)
@@ -242,7 +248,18 @@ class Canvas(QWidget):
             return
         else:
             # edit mode
-            self.setCursor(CURSOR_DEFAULT)
+            if self.resize_tag is None:
+                self.setCursor(CURSOR_DEFAULT)
+            elif self.selectedShape:
+                if self.resize_tag == RESIZE_TOP:
+                    self.selectedShape.ymin = int(pos.y())
+                elif self.resize_tag == RESIZE_BOTTOM:
+                    self.selectedShape.ymax = int(pos.y())
+                elif self.resize_tag == RESIZE_LEFT:
+                    self.selectedShape.xmin = int(pos.x())
+                elif self.resize_tag == RESIZE_RIGHT:
+                    self.selectedShape.xmax = int(pos.x())
+
             for meta_shape in reversed([s for s in self.prop_meta_shapes]):
                 if meta_shape['shape'].containsPoint(pos) and \
                                 meta_shape['keep'] == 1:
@@ -268,13 +285,21 @@ class Canvas(QWidget):
                 if self.selectedShape.nearTop(pos):
                     self.setCursor(CURSOR_SIZE_V)
                     if Qt.LeftButton & ev.buttons():
-                        print(pos)
+                        self.resize_tag = RESIZE_TOP
                 elif self.selectedShape.nearBottom(pos):
                     self.setCursor(CURSOR_SIZE_V)
+                    if Qt.LeftButton & ev.buttons():
+                        self.resize_tag = RESIZE_BOTTOM
                 elif self.selectedShape.nearLeft(pos):
                     self.setCursor(CURSOR_SIZE_H)
+                    if Qt.LeftButton & ev.buttons():
+                        self.resize_tag = RESIZE_LEFT
                 elif self.selectedShape.nearRight(pos):
                     self.setCursor(CURSOR_SIZE_H)
+                    if Qt.LeftButton & ev.buttons():
+                        self.resize_tag = RESIZE_RIGHT
+                else:
+                    self.resize_tag = None
 
 
 
@@ -304,6 +329,7 @@ class Canvas(QWidget):
                 self.current_shape = None
                 print('draw done')
                 self.repaint()
+            self.resize_tag = None
 
     def addTrueShape(self):
         if self.current_shape and self.rect_points:
