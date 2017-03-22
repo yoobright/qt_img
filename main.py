@@ -443,21 +443,15 @@ class MainWindow(QMainWindow, WindowMixin):
         # if len(self.canvas.true_meta_shapes) < 1:
         if 1:
             test_shape = Shape('test')
-            test_shape.points = [
-                QPoint(100, 100),
-                QPoint(100, 200),
-                QPoint(200, 200),
-                QPoint(200, 100),
-            ]
+            test_shape.xmin = 100
+            test_shape.ymin = 100
+            test_shape.xmax = 200
+            test_shape.ymax = 200
             meta_shape = {
                 'shape': test_shape,
                 'keep': 1,
                 'name': 'test',
                 'score': 0.9,
-                'xmin': 100,
-                'ymin': 100,
-                'xmax': 200,
-                'ymax': 200
             }
             self.canvas.prop_meta_shapes.append(meta_shape)
         self.canvas.update()

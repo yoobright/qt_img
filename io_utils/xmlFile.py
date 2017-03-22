@@ -26,35 +26,43 @@ class xmlFile(object):
     def covert_shape(self):
         for box in self.reader.true_boxlist:
             shape = Shape(box['name'], b_type='true')
-            shape.addPoint(QPoint(box['xmin'], box['ymin']))
-            shape.addPoint(QPoint(box['xmax'], box['ymin']))
-            shape.addPoint(QPoint(box['xmax'], box['ymax']))
-            shape.addPoint(QPoint(box['xmin'], box['ymax']))
+            shape.xmin = box['xmin']
+            shape.ymin = box['ymin']
+            shape.xmax = box['xmax']
+            shape.ymax = box['ymax']
+            # shape.addPoint(QPoint(box['xmin'], box['ymin']))
+            # shape.addPoint(QPoint(box['xmax'], box['ymin']))
+            # shape.addPoint(QPoint(box['xmax'], box['ymax']))
+            # shape.addPoint(QPoint(box['xmin'], box['ymax']))
             meta_shape = {
                 'shape': shape,
                 'name': box['name'],
-                'xmin': box['xmin'],
-                'ymin': box['ymin'],
-                'xmax': box['xmax'],
-                'ymax': box['ymax']
+                # 'xmin': box['xmin'],
+                # 'ymin': box['ymin'],
+                # 'xmax': box['xmax'],
+                # 'ymax': box['ymax']
             }
             self.true_meta_shapes.append(meta_shape)
 
         for box in self.reader.prop_boxlist:
             shape = Shape(box['name'], b_type='prop')
-            shape.addPoint(QPoint(box['xmin'], box['ymin']))
-            shape.addPoint(QPoint(box['xmax'], box['ymin']))
-            shape.addPoint(QPoint(box['xmax'], box['ymax']))
-            shape.addPoint(QPoint(box['xmin'], box['ymax']))
+            shape.xmin = box['xmin']
+            shape.ymin = box['ymin']
+            shape.xmax = box['xmax']
+            shape.ymax = box['ymax']
+            # shape.addPoint(QPoint(box['xmin'], box['ymin']))
+            # shape.addPoint(QPoint(box['xmax'], box['ymin']))
+            # shape.addPoint(QPoint(box['xmax'], box['ymax']))
+            # shape.addPoint(QPoint(box['xmin'], box['ymax']))
             meta_shape = {
                 'shape': shape,
                 'name': box['name'],
                 'score': box['score'],
                 'keep': box['keep'],
-                'xmin': box['xmin'],
-                'ymin': box['ymin'],
-                'xmax': box['xmax'],
-                'ymax': box['ymax']
+                # 'xmin': box['xmin'],
+                # 'ymin': box['ymin'],
+                # 'xmax': box['xmax'],
+                # 'ymax': box['ymax']
             }
             self.prop_meta_shapes.append(meta_shape)
 

@@ -313,17 +313,21 @@ class Canvas(QWidget):
             ymax = int(self.rect_points[1].y())
             name = self.current_shape.name
             self.current_shape.b_type = 'true'
-            self.current_shape.addPoint(QPoint(xmin, ymin))
-            self.current_shape.addPoint(QPoint(xmax, ymin))
-            self.current_shape.addPoint(QPoint(xmax, ymax))
-            self.current_shape.addPoint(QPoint(xmin, ymax))
+            self.current_shape.xmin = xmin
+            self.current_shape.ymin = ymin
+            self.current_shape.xmax = xmax
+            self.current_shape.ymax = ymax
+            # self.current_shape.addPoint(QPoint(xmin, ymin))
+            # self.current_shape.addPoint(QPoint(xmax, ymin))
+            # self.current_shape.addPoint(QPoint(xmax, ymax))
+            # self.current_shape.addPoint(QPoint(xmin, ymax))
             meta_shape = {
                 'shape': self.current_shape,
                 'name': name,
-                'xmin': xmin,
-                'ymin': ymin,
-                'xmax': xmax,
-                'ymax': ymax
+                # 'xmin': xmin,
+                # 'ymin': ymin,
+                # 'xmax': xmax,
+                # 'ymax': ymax
             }
             self.true_meta_shapes.append(meta_shape)
 
@@ -400,8 +404,10 @@ class Canvas(QWidget):
             writer = NewWriter(img_name, img_size)
 
             for meta_shape in self.true_meta_shapes:
-                writer.addTrueBox(meta_shape['xmin'], meta_shape['ymin'],
-                                  meta_shape['xmax'], meta_shape['ymax'],
+                writer.addTrueBox(meta_shape['shape'].xmin,
+                                  meta_shape['shape'].ymin,
+                                  meta_shape['shape'].xmax,
+                                  meta_shape['shape'].ymax,
                                   meta_shape['name'])
             writer.save(dir_path)
 

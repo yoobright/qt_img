@@ -19,10 +19,22 @@ class Shape(object):
         self.ymin = None
         self.xmax = None
         self.ymax = None
-        self.points = []
+        # self.points = self.getPoints()
         self.fill = False
         self.selected = False
         self.b_type = b_type
+
+    @property
+    def points(self):
+        if self.xmin and self.ymin and self.xmax and self.ymax:
+            return [
+                QPoint(self.xmin, self.ymin),
+                QPoint(self.xmax, self.ymin),
+                QPoint(self.xmax, self.ymax),
+                QPoint(self.xmin, self.ymax)
+            ]
+        else:
+            return []
 
     def paint(self, painter, pen=None):
         if self.points:
