@@ -292,8 +292,9 @@ class Canvas(QWidget):
             self.menus.exec_(ev.globalPos())
 
         if ev.button() == Qt.LeftButton:
-            if self.current_shape:
-                self.newShape.emit()
+            if self.current_shape and self.rect_points:
+                if self.rect_points[0] != self.rect_points[1]:
+                    self.newShape.emit()
                 self.rect_points = None
                 self.current_shape = None
                 print('draw done')
