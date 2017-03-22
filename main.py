@@ -177,8 +177,10 @@ class MainWindow(QMainWindow, WindowMixin):
         # box action
         set_true_action = action('Set True Box', self.setTrue,
                                  None, None, u'Set True Box')
-        set_error_action = action('Set Error Box', self.setTrue,
+        set_error_action = action('Set Error Box', self.setError,
                                  None, None, u'Set Error Box')
+        del_box_action = action('Del Current Box', self.delBox,
+                                None, None, u'Del Current Box')
 
         # store actions for further handling.
         self.actions = struct(
@@ -205,7 +207,8 @@ class MainWindow(QMainWindow, WindowMixin):
         addActions(self.menus.edit, (set_true_action, set_error_action))
         self.menuBar().addAction(info_action)
         # set canvas action
-        addActions(self.canvas.menus, (set_true_action, set_error_action))
+        addActions(self.canvas.menus, (del_box_action, None,
+                                       set_true_action, set_error_action))
 
     def scanAllImages(self, folderPath):
         extensions = ['.jpeg','.jpg', '.png', '.bmp']
@@ -437,6 +440,16 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def setError(self):
         pass
+
+    def delBox(self):
+        if self.canvas.selectedShape and \
+            self.canvas.selectedShape.b_type=='true':
+            for meta_shape in self.canvas.true_meta_shapes:
+                if meta_shape['shape'] == self.canvas.selectedShape:
+                    self.canvas.true_meta_shapes.remove(meta_shape)
+                    break
+            self.canvas.update()
+
 
     def testImg(self):
         from m_widgets.shape import Shape
