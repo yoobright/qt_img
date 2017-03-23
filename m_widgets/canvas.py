@@ -4,8 +4,9 @@ from math import sqrt
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from shape import Shape
-from io_utils.m_io import NewWriter
-from io_utils.utils import compute_iou
+from m_utils.m_io import NewWriter
+from m_utils.utils import compute_iou
+from m_utils.utils import read, distance
 
 CURSOR_DEFAULT = Qt.ArrowCursor
 CURSOR_POINT = Qt.PointingHandCursor
@@ -14,6 +15,8 @@ CURSOR_MOVE = Qt.ClosedHandCursor
 CURSOR_GRAB = Qt.OpenHandCursor
 CURSOR_SIZE_V = Qt.SizeVerCursor
 CURSOR_SIZE_H = Qt.SizeHorCursor
+CURSOR_SIZE_F = Qt.SizeFDiagCursor
+CURSOR_SIZE_B = Qt.SizeBDiagCursor
 
 EDIT, DRAW = 1, 2
 
@@ -21,17 +24,10 @@ RESIZE_TOP = 0
 RESIZE_BOTTOM = 1
 RESIZE_LEFT = 2
 RESIZE_RIGHT = 3
-
-
-def read(filename, default=None):
-    try:
-        with open(filename, 'rb') as f:
-            return f.read()
-    except:
-        return default
-
-def distance(p):
-    return sqrt(p.x() * p.x() + p.y() * p.y())
+RESIZE_TOP_LEFT = 4
+RESIZE_TOP_RIGHT = 5
+RESIZE_BOTTOM_LEFT = 6
+RESIZE_BOTTOM_RIGHT = 7
 
 
 class Canvas(QWidget):
@@ -251,7 +247,19 @@ class Canvas(QWidget):
             if self.resize_tag is None:
                 self.setCursor(CURSOR_DEFAULT)
             elif self.selectedShape:
-                if self.resize_tag == RESIZE_TOP:
+                if self.resize_tag == RESIZE_TOP_LEFT:
+                    self.selectedShape.xmin = int(pos.x())
+                    self.selectedShape.ymin = int(pos.y())
+                elif self.resize_tag == RESIZE_TOP_RIGHT:
+                    self.selectedShape.xmax = int(pos.x())
+                    self.selectedShape.ymin = int(pos.y())
+                elif self.resize_tag == RESIZE_BOTTOM_LEFT:
+                    self.selectedShape.xmin = int(pos.x())
+                    self.selectedShape.ymax = int(pos.y())
+                elif self.resize_tag == RESIZE_BOTTOM_RIGHT:
+                    self.selectedShape.xmax = int(pos.x())
+                    self.selectedShape.ymax = int(pos.y())
+                elif self.resize_tag == RESIZE_TOP:
                     self.selectedShape.ymin = int(pos.y())
                 elif self.resize_tag == RESIZE_BOTTOM:
                     self.selectedShape.ymax = int(pos.y())
@@ -282,24 +290,37 @@ class Canvas(QWidget):
                 self.htShape = None
 
             if self.selectedShape:
-                if self.selectedShape.nearTop(pos):
+                resize_tag = None
+                if self.selectedShape.nearTopLeft(pos):
+                    self.setCursor(CURSOR_SIZE_F)
+                    resize_tag = RESIZE_TOP_LEFT
+                elif self.selectedShape.nearTopRight(pos):
+                    self.setCursor(CURSOR_SIZE_B)
+                    resize_tag = RESIZE_TOP_RIGHT
+                elif self.selectedShape.nearBottomLeft(pos):
+                    self.setCursor(CURSOR_SIZE_B)
+                    resize_tag = RESIZE_BOTTOM_LEFT
+                elif self.selectedShape.nearBottomRight(pos):
+                    self.setCursor(CURSOR_SIZE_F)
+                    resize_tag = RESIZE_BOTTOM_RIGHT
+                elif self.selectedShape.nearTop(pos):
                     self.setCursor(CURSOR_SIZE_V)
-                    if Qt.LeftButton & ev.buttons():
-                        self.resize_tag = RESIZE_TOP
+                    resize_tag = RESIZE_TOP
                 elif self.selectedShape.nearBottom(pos):
                     self.setCursor(CURSOR_SIZE_V)
-                    if Qt.LeftButton & ev.buttons():
-                        self.resize_tag = RESIZE_BOTTOM
+                    resize_tag = RESIZE_BOTTOM
                 elif self.selectedShape.nearLeft(pos):
                     self.setCursor(CURSOR_SIZE_H)
-                    if Qt.LeftButton & ev.buttons():
-                        self.resize_tag = RESIZE_LEFT
+                    resize_tag = RESIZE_LEFT
                 elif self.selectedShape.nearRight(pos):
                     self.setCursor(CURSOR_SIZE_H)
-                    if Qt.LeftButton & ev.buttons():
-                        self.resize_tag = RESIZE_RIGHT
+                    resize_tag = RESIZE_RIGHT
                 else:
                     self.resize_tag = None
+
+                if Qt.LeftButton & ev.buttons():
+                    if resize_tag is not None:
+                        self.resize_tag = resize_tag
 
 
 

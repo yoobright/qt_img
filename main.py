@@ -9,7 +9,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from m_widgets.canvas import Canvas
 from m_widgets.labelDialog import LabelDialog
-from io_utils.xmlFile import xmlFile
+from m_utils.xmlFile import xmlFile
 
 try:
     _fromUtf8 = QString.fromUtf8
@@ -175,10 +175,12 @@ class MainWindow(QMainWindow, WindowMixin):
         test_action = action('&Test', self.testImg,
                              None, None, u'Test')
         # box action
-        set_true_action = action('Set True Box', self.setTrue,
+        set_true_action = action('Set True Box', self.setTrueBox,
                                  None, None, u'Set True Box')
-        set_error_action = action('Set Error Box', self.setError,
+        set_error_action = action('Set Error Box', self.setErrorBox,
                                  None, None, u'Set Error Box')
+        set_dev_action = action('Set Deviation Box', self.setDevBox,
+                                 None, None, u'Set Deviation Box')
         del_box_action = action('Del Current Box', self.delBox,
                                 None, None, u'Del Current Box')
 
@@ -204,11 +206,14 @@ class MainWindow(QMainWindow, WindowMixin):
         addActions(self.menus.file, (open_action, set_anno_action,
                                      None, quit_action))
         addActions(self.menus.view, (fit_action,))
-        addActions(self.menus.edit, (set_true_action, set_error_action))
+        addActions(self.menus.edit, (del_box_action, None,
+                                     set_true_action, set_dev_action,
+                                     set_error_action))
         self.menuBar().addAction(info_action)
         # set canvas action
         addActions(self.canvas.menus, (del_box_action, None,
-                                       set_true_action, set_error_action))
+                                       set_true_action, set_dev_action,
+                                       set_error_action))
 
     def scanAllImages(self, folderPath):
         extensions = ['.jpeg','.jpg', '.png', '.bmp']
@@ -284,11 +289,14 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.scale = self.scaleFitWindow()
             self.canvas.adjustSize()
             self.canvas.update()
-            self.canvas.setMode('edit')
-            self.actions.draw.setChecked(False)
+            self.setEditMode()
             self.imgFname = u(filename)
             return True
         return False
+
+    def setEditMode(self):
+        self.canvas.setMode('edit')
+        self.actions.draw.setChecked(False)
 
     def fitWindowSize(self):
         if self.canvas.pixmap:
@@ -415,6 +423,7 @@ class MainWindow(QMainWindow, WindowMixin):
         if text is not None:
             self.canvas.current_shape.name = str(text)
             self.canvas.addTrueShape()
+            self.setEditMode()
 
     def draw(self):
         if self.canvas.isEditMode():
@@ -435,10 +444,13 @@ class MainWindow(QMainWindow, WindowMixin):
     #     qr.moveCenter(cp)
     #     self.move(qr.topLeft())
 
-    def setTrue(self):
+    def setTrueBox(self):
         pass
 
-    def setError(self):
+    def setErrorBox(self):
+        pass
+
+    def setDevBox(self):
         pass
 
     def delBox(self):

@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
+from m_utils.utils import distance
 
 GT_LINE_COLOR = QColor("#7FFF00")
 DEFAULT_FILL_COLOR = QColor(255, 0, 0, 100)
@@ -63,25 +64,45 @@ class Shape(object):
 
     def nearTop(self, point):
         if (self.points[0].x() < point.x() < self.points[1].x()) and \
-                (abs(self.points[0].y() - point.y()) < 2):
+                (abs(self.points[0].y() - point.y()) < 3):
             return True
         return False
 
     def nearBottom(self, point):
         if (self.points[3].x() < point.x() < self.points[2].x()) and \
-                (abs(self.points[2].y() - point.y()) < 2):
+                (abs(self.points[2].y() - point.y()) < 3):
             return True
         return False
 
     def nearLeft(self, point):
         if (self.points[0].y() < point.y() < self.points[3].y()) and \
-                (abs(self.points[0].x() - point.x()) < 2):
+                (abs(self.points[0].x() - point.x()) < 3):
             return True
         return False
 
     def nearRight(self, point):
         if (self.points[1].y() < point.y() < self.points[2].y()) and \
-                (abs(self.points[1].x() - point.x()) < 2):
+                (abs(self.points[1].x() - point.x()) < 3):
+            return True
+        return False
+
+    def nearTopLeft(self, point):
+        if distance(point - self.points[0]) < 3:
+            return True
+        return False
+
+    def nearTopRight(self, point):
+        if distance(point - self.points[1]) < 3:
+            return True
+        return False
+
+    def nearBottomLeft(self, point):
+        if distance(point - self.points[3]) < 3:
+            return True
+        return False
+
+    def nearBottomRight(self, point):
+        if distance(point - self.points[2]) < 3:
             return True
         return False
 
