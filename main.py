@@ -3,6 +3,7 @@ from __future__ import print_function, division
 
 import os
 import sys
+from copy import deepcopy
 from functools import partial
 
 from PyQt4.QtCore import *
@@ -342,6 +343,8 @@ class MainWindow(QMainWindow, WindowMixin):
         print("xmlDir: {}".format(self.xmlDir))
         print("xmlFname: {}".format(self.xmlFname))
         print("curr_canvas_scale: {}".format(self.curr_canvas_scale))
+        print("true_meta_shapes: {}".format(self.canvas.true_meta_shapes))
+        print("prop_meta_shapes: {}".format(self.canvas.prop_meta_shapes))
 
     def openNextImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
@@ -445,17 +448,40 @@ class MainWindow(QMainWindow, WindowMixin):
     #     self.move(qr.topLeft())
 
     def setTrueBox(self):
-        pass
-
-    def setErrorBox(self):
-        pass
+        if self.canvas.selectedShape and \
+            self.canvas.selectedShape.b_type == 'prop':
+            for meta_shape in self.canvas.prop_meta_shapes:
+                if meta_shape['shape'] == self.canvas.selectedShape:
+                    meta_shape['mtag'] = 1
+                    break
+            newShape = deepcopy(self.canvas.selectedShape)
+            newShape.b_type == 'true'
+            meta_shape = {
+                'shape': newShape,
+                'name':  newShape.name,
+            }
+            self.canvas.true_meta_shapes.append(meta_shape)
+            self.canvas.update()
 
     def setDevBox(self):
-        pass
+        if self.canvas.selectedShape and \
+            self.canvas.selectedShape.b_type == 'prop':
+            for meta_shape in self.canvas.prop_meta_shapes:
+                if meta_shape['shape'] == self.canvas.selectedShape:
+                    meta_shape['mtag'] = 2
+                    break
+
+    def setErrorBox(self):
+        if self.canvas.selectedShape and \
+            self.canvas.selectedShape.b_type == 'prop':
+            for meta_shape in self.canvas.prop_meta_shapes:
+                if meta_shape['shape'] == self.canvas.selectedShape:
+                    meta_shape['mtag'] = 4
+                    break
 
     def delBox(self):
         if self.canvas.selectedShape and \
-            self.canvas.selectedShape.b_type=='true':
+            self.canvas.selectedShape.b_type == 'true':
             for meta_shape in self.canvas.true_meta_shapes:
                 if meta_shape['shape'] == self.canvas.selectedShape:
                     self.canvas.true_meta_shapes.remove(meta_shape)
@@ -468,6 +494,7 @@ class MainWindow(QMainWindow, WindowMixin):
         # if len(self.canvas.true_meta_shapes) < 1:
         if 1:
             test_shape = Shape('test')
+            test_shape.b_type = 'prop'
             test_shape.xmin = 100
             test_shape.ymin = 100
             test_shape.xmax = 200

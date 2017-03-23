@@ -248,25 +248,37 @@ class Canvas(QWidget):
                 self.setCursor(CURSOR_DEFAULT)
             elif self.selectedShape:
                 if self.resize_tag == RESIZE_TOP_LEFT:
-                    self.selectedShape.xmin = int(pos.x())
-                    self.selectedShape.ymin = int(pos.y())
+                    if pos.x() < self.selectedShape.xmax - 5 and \
+                       pos.y() < self.selectedShape.ymax - 5:
+                        self.selectedShape.xmin = int(pos.x())
+                        self.selectedShape.ymin = int(pos.y())
                 elif self.resize_tag == RESIZE_TOP_RIGHT:
-                    self.selectedShape.xmax = int(pos.x())
-                    self.selectedShape.ymin = int(pos.y())
+                    if pos.x() > self.selectedShape.xmin + 5 and \
+                       pos.y() < self.selectedShape.ymax - 5:
+                        self.selectedShape.xmax = int(pos.x())
+                        self.selectedShape.ymin = int(pos.y())
                 elif self.resize_tag == RESIZE_BOTTOM_LEFT:
-                    self.selectedShape.xmin = int(pos.x())
-                    self.selectedShape.ymax = int(pos.y())
+                    if pos.x() < self.selectedShape.xmax - 5 and \
+                       pos.y() > self.selectedShape.ymin + 5:
+                        self.selectedShape.xmin = int(pos.x())
+                        self.selectedShape.ymax = int(pos.y())
                 elif self.resize_tag == RESIZE_BOTTOM_RIGHT:
-                    self.selectedShape.xmax = int(pos.x())
-                    self.selectedShape.ymax = int(pos.y())
+                    if pos.x() > self.selectedShape.xmin + 5 and \
+                       pos.y() > self.selectedShape.ymin + 5:
+                        self.selectedShape.xmax = int(pos.x())
+                        self.selectedShape.ymax = int(pos.y())
                 elif self.resize_tag == RESIZE_TOP:
-                    self.selectedShape.ymin = int(pos.y())
+                    if pos.y() < self.selectedShape.ymax - 5:
+                        self.selectedShape.ymin = int(pos.y())
                 elif self.resize_tag == RESIZE_BOTTOM:
-                    self.selectedShape.ymax = int(pos.y())
+                    if pos.y() > self.selectedShape.ymin + 5:
+                        self.selectedShape.ymax = int(pos.y())
                 elif self.resize_tag == RESIZE_LEFT:
-                    self.selectedShape.xmin = int(pos.x())
+                    if pos.x() < self.selectedShape.xmax - 5:
+                        self.selectedShape.xmin = int(pos.x())
                 elif self.resize_tag == RESIZE_RIGHT:
-                    self.selectedShape.xmax = int(pos.x())
+                    if pos.x() > self.selectedShape.xmin + 5:
+                        self.selectedShape.xmax = int(pos.x())
 
             for meta_shape in reversed([s for s in self.prop_meta_shapes]):
                 if meta_shape['shape'].containsPoint(pos) and \
@@ -321,8 +333,6 @@ class Canvas(QWidget):
                 if Qt.LeftButton & ev.buttons():
                     if resize_tag is not None:
                         self.resize_tag = resize_tag
-
-
 
     def mousePressEvent(self, ev):
         pos = self.transformPos(ev.pos())

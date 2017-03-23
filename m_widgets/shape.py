@@ -108,7 +108,7 @@ class Shape(object):
 
     def nearShape(self, point):
         if (self.points[0].x() - 2 < point.x() < self.points[2].x() + 2) and \
-            (self.points[0].y() - 2 < point.y() < self.points[2].y() + 2):
+           (self.points[0].y() - 2 < point.y() < self.points[2].y() + 2):
             return True
         return False
 
