@@ -37,6 +37,7 @@ class xmlFile(object):
             meta_shape = {
                 'shape': shape,
                 'name': box['name'],
+                'mtag': 0
                 # 'xmin': box['xmin'],
                 # 'ymin': box['ymin'],
                 # 'xmax': box['xmax'],
@@ -59,6 +60,7 @@ class xmlFile(object):
                 'name': box['name'],
                 'score': box['score'],
                 'keep': box['keep'],
+                'mtag': 0
                 # 'xmin': box['xmin'],
                 # 'ymin': box['ymin'],
                 # 'xmax': box['xmax'],

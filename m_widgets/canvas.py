@@ -461,11 +461,16 @@ class Canvas(QWidget):
             writer = NewWriter(img_name, img_size)
 
             for meta_shape in self.true_meta_shapes:
+                if 'mtag' in meta_shape.keys():
+                    mtag = meta_shape['mtag']
+                else:
+                    mtag =None
                 writer.addTrueBox(meta_shape['shape'].xmin,
                                   meta_shape['shape'].ymin,
                                   meta_shape['shape'].xmax,
                                   meta_shape['shape'].ymax,
-                                  meta_shape['name'])
+                                  meta_shape['name'],
+                                  mtag)
             writer.save(dir_path)
 
 

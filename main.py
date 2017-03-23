@@ -459,6 +459,7 @@ class MainWindow(QMainWindow, WindowMixin):
             meta_shape = {
                 'shape': newShape,
                 'name':  newShape.name,
+                'mtag': 1
             }
             self.canvas.true_meta_shapes.append(meta_shape)
             self.canvas.update()

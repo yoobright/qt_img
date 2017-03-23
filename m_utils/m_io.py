@@ -93,9 +93,11 @@ class NewWriter:
         segmented.text = '0'
         return top
 
-    def addTrueBox(self, xmin, ymin, xmax, ymax, name):
+    def addTrueBox(self, xmin, ymin, xmax, ymax, name, mtag=None):
         bndbox = {'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax,
                   'name': name}
+        if mtag is not None:
+            bndbox['mtag'] = mtag
         self.true_boxlist.append(bndbox)
 
     def addPropBox(self, xmin, ymin, xmax, ymax, name, score=0, keep=0):
@@ -123,6 +125,10 @@ class NewWriter:
             xmax.text = str(true_box['xmax'])
             ymax = SubElement(bndbox, 'ymax')
             ymax.text = str(true_box['ymax'])
+            print(true_box)
+            if 'mtag' in true_box.keys():
+                mtag = SubElement(object_item, 'mtag')
+                mtag.text = str(true_box['mtag'])
 
         for proposal_box in self.prop_boxlist:
             proposal_item = SubElement(top, 'proposal')
@@ -141,6 +147,9 @@ class NewWriter:
             score.text = str(proposal_box['score'])
             keep = SubElement(proposal_item, 'keep')
             keep.text = str(proposal_box['keep'])
+            if 'mtag' in proposal_box.keys():
+                mtag = SubElement(proposal_item, 'mtag')
+                mtag.text = str(proposal_box['mtag'])
 
     def save(self, dir=None, targetFile=None,):
         root = self.genXML()
