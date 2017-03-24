@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division
-from math import sqrt
+from math import sqrt, floor
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from shape import Shape
@@ -71,7 +71,7 @@ class Canvas(QWidget):
         return QPointF(x, y)
 
     def outOfPixmap(self, p):
-        w, h = self.pixmap.width(), self.pixmap.height()
+        w, h = self.pixmap.width() - 1, self.pixmap.height() - 1
         return not (0 <= p.x() <= w and 0 <= p.y() <= h)
 
     def intersectionPoint(self, p1, p2):
@@ -221,8 +221,8 @@ class Canvas(QWidget):
         pos = self.transformPos(ev.pos())
         # inside pic
         if not self.outOfPixmap(pos):
-            x = int(pos.x())
-            y = int(pos.y())
+            x = int(floor(pos.x()))
+            y = int(floor(pos.y()))
             r, g, b = QColor(self.pixmap.toImage().pixel(x, y)).getRgb()[:-1]
             status_str = u"x: {:<4d} y: {:<4d} rgb: {:<4d} {:<4d} {:<4d}"\
                 .format(x, y, r, g, b)
