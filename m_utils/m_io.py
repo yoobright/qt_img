@@ -100,9 +100,12 @@ class NewWriter:
             bndbox['mtag'] = mtag
         self.true_boxlist.append(bndbox)
 
-    def addPropBox(self, xmin, ymin, xmax, ymax, name, score=0, keep=0):
+    def addPropBox(self, xmin, ymin, xmax, ymax, name, score=0, keep=0,
+                   mtag=None):
         bndbox = {'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax,
                   'name': name, 'score': score, 'keep': keep}
+        if mtag is not None:
+            bndbox['mtag'] = mtag
         self.prop_boxlist.append(bndbox)
 
     def appendObjects(self, top):
@@ -125,7 +128,6 @@ class NewWriter:
             xmax.text = str(true_box['xmax'])
             ymax = SubElement(bndbox, 'ymax')
             ymax.text = str(true_box['ymax'])
-            print(true_box)
             if 'mtag' in true_box.keys():
                 mtag = SubElement(object_item, 'mtag')
                 mtag.text = str(true_box['mtag'])

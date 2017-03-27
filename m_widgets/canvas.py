@@ -199,6 +199,10 @@ class Canvas(QWidget):
         elif mode == 'draw':
             self.mode = DRAW
 
+    def isSelectedPropShape(self):
+        return bool(self.selectedShape and self.selectedShape.b_type == 'prop')
+
+
     def enterEvent(self, ev):
         pass
 
@@ -386,6 +390,10 @@ class Canvas(QWidget):
                 # 'xmax': xmax,
                 # 'ymax': ymax
             }
+            if self.isSelectedPropShape():
+                meta_shape['mtag'] = 2
+            else:
+                meta_shape['mtag'] = 3
             self.true_meta_shapes.append(meta_shape)
 
     def deSelectShape(self):
@@ -471,7 +479,21 @@ class Canvas(QWidget):
                                   meta_shape['shape'].ymax,
                                   meta_shape['name'],
                                   mtag)
-            writer.save(dir_path)
+
+            for meta_shape in self.prop_meta_shapes:
+                if 'mtag' in meta_shape.keys():
+                    mtag = meta_shape['mtag']
+                else:
+                    mtag =None
+                writer.addPropBox(meta_shape['shape'].xmin,
+                                  meta_shape['shape'].ymin,
+                                  meta_shape['shape'].xmax,
+                                  meta_shape['shape'].ymax,
+                                  meta_shape['name'],
+                                  meta_shape['score'],
+                                  meta_shape['keep'],
+                                  mtag)
+            print(writer.save(dir_path))
 
 
 
