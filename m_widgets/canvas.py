@@ -250,7 +250,7 @@ class Canvas(QWidget):
             # edit mode
             if self.resize_tag is None:
                 self.setCursor(CURSOR_DEFAULT)
-            elif self.selectedShape:
+            elif self.selectedShape and self.selectedShape.b_type == 'true':
                 if self.resize_tag == RESIZE_TOP_LEFT:
                     if pos.x() < self.selectedShape.xmax - 5 and \
                        pos.y() < self.selectedShape.ymax - 5:
@@ -305,7 +305,7 @@ class Canvas(QWidget):
                 self.update()
                 self.htShape = None
 
-            if self.selectedShape:
+            if self.selectedShape and self.selectedShape.b_type == 'true':
                 resize_tag = None
                 if self.selectedShape.nearTopLeft(pos):
                     self.setCursor(CURSOR_SIZE_F)

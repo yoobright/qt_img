@@ -292,6 +292,11 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.update()
             self.setEditMode()
             self.imgFname = u(filename)
+
+            if len(self.imageList) > 1:
+                title = u"{} [{}/{}]".format(__appname__, self.imageIdx + 1,
+                                             len(self.imageList))
+                self.setWindowTitle(title)
             return True
         return False
 
@@ -359,9 +364,10 @@ class MainWindow(QMainWindow, WindowMixin):
             return
 
         filename = self.imageList[nextIdx]
+        self.imageIdx = nextIdx
         self.loadFile(filename)
         self.loadXMLFile()
-        self.imageIdx = nextIdx
+        # self.imageIdx = nextIdx
 
     def openPrevImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
@@ -376,9 +382,10 @@ class MainWindow(QMainWindow, WindowMixin):
             return
 
         filename = self.imageList[prevIdx]
+        self.imageIdx = prevIdx
         self.loadFile(filename)
         self.loadXMLFile()
-        self.imageIdx = prevIdx
+        # self.imageIdx = prevIdx
 
     def saveLabel(self):
         if self.imgFname:
