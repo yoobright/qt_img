@@ -330,10 +330,18 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def loadXMLFile(self):
         if self.xmlDir:
-            xml_file = os.path.join(self.xmlDir,
-            os.path.basename(self.imgFname) + ".xml").replace('\\', '/')
+            find = False
+            name_list = [os.path.basename(self.imgFname),
+                         os.path.splitext(os.path.basename(self.imgFname))[0]]
+            xml_file = None
+            for name in name_list:
+                xml_file = os.path.join(self.xmlDir,
+                                        name + ".xml").replace('\\', '/')
+                if os.path.exists(xml_file):
+                    find = True
+                    break
 
-            if os.path.exists(xml_file):
+            if find:
                 self.status(u'find xml file', delay=1000)
                 self.xmlFname = xml_file
                 xml_file = xmlFile(self.xmlFname)
