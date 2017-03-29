@@ -27,7 +27,8 @@ class Shape(object):
 
     @property
     def points(self):
-        if self.xmin and self.ymin and self.xmax and self.ymax:
+        if (self.xmin is not None) and (self.ymin is not None) and \
+                (self.xmax is not None) and (self.ymax is not None):
             return [
                 QPoint(self.xmin, self.ymin),
                 QPoint(self.xmax, self.ymin),

@@ -7,6 +7,7 @@ from shape import Shape
 from m_utils.m_io import NewWriter
 from m_utils.utils import compute_iou
 from m_utils.utils import read, distance
+from m_utils.style import *
 
 CURSOR_DEFAULT = Qt.ArrowCursor
 CURSOR_POINT = Qt.PointingHandCursor
@@ -150,19 +151,11 @@ class Canvas(QWidget):
             shape.paint(painter)
 
     def paintPropShape(self, painter):
-        color = QColor("#FFF68F")
-        pen = QPen()
         for meta_shape in self.prop_meta_shapes:
-            if meta_shape['keep'] == 1:
-                color.setAlpha(255)
-                width = 2
-                pen.setStyle(Qt.SolidLine)
+            if meta_shape['mtag']:
+                pen = getRectStyle(PROP_D_STYLE)
             else:
-                color.setAlpha(180)
-                width = 1
-                pen.setStyle(Qt.DotLine)
-            pen.setColor(color)
-            pen.setWidth(width)
+                pen = getRectStyle(PROP_1_STYLE, meta_shape['keep'])
             shape = meta_shape['shape']
             if (meta_shape == self.hpShape or shape.selected) and \
                             meta_shape['keep'] == 1:

@@ -184,6 +184,8 @@ class MainWindow(QMainWindow, WindowMixin):
                                  None, None, u'Set Deviation Box')
         del_box_action = action('Del Current Box', self.delBox,
                                 None, None, u'Del Current Box')
+        res_box_action = action('Reset Box', self.resetBox,
+                                None, None, u'Reset Box')
 
         # store actions for further handling.
         self.actions = struct(
@@ -209,12 +211,12 @@ class MainWindow(QMainWindow, WindowMixin):
         addActions(self.menus.view, (fit_action,))
         addActions(self.menus.edit, (del_box_action, None,
                                      set_true_action, set_dev_action,
-                                     set_error_action))
+                                     set_error_action, res_box_action))
         self.menuBar().addAction(info_action)
         # set canvas action
         addActions(self.canvas.menus, (del_box_action, None,
                                        set_true_action, set_dev_action,
-                                       set_error_action))
+                                       set_error_action, res_box_action))
 
     def scanAllImages(self, folderPath):
         extensions = ['.jpeg','.jpg', '.png', '.bmp']
@@ -350,6 +352,11 @@ class MainWindow(QMainWindow, WindowMixin):
         print("curr_canvas_scale: {}".format(self.curr_canvas_scale))
         print("true_meta_shapes: {}".format(self.canvas.true_meta_shapes))
         print("prop_meta_shapes: {}".format(self.canvas.prop_meta_shapes))
+        print("selectedShape: {}".format(self.canvas.selectedShape))
+        # for meta_shape in reversed([s for s in self.canvas.prop_meta_shapes]):
+        #     if meta_shape['keep'] == 1:
+        #         print()
+        #         print(meta_shape['shape'].points)
 
     def openNextImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
@@ -462,7 +469,8 @@ class MainWindow(QMainWindow, WindowMixin):
                     meta_shape['mtag'] = 1
                     break
             newShape = deepcopy(self.canvas.selectedShape)
-            newShape.b_type == 'true'
+            newShape.b_type ='true'
+            newShape.selected = False
             meta_shape = {
                 'shape': newShape,
                 'name':  newShape.name,
@@ -485,6 +493,13 @@ class MainWindow(QMainWindow, WindowMixin):
             for meta_shape in self.canvas.prop_meta_shapes:
                 if meta_shape['shape'] == self.canvas.selectedShape:
                     meta_shape['mtag'] = 4
+                    break
+    def resetBox(self):
+        if self.canvas.selectedShape and \
+            self.canvas.selectedShape.b_type == 'prop':
+            for meta_shape in self.canvas.prop_meta_shapes:
+                if meta_shape['shape'] == self.canvas.selectedShape:
+                    meta_shape['mtag'] = 0
                     break
 
     def delBox(self):
@@ -512,6 +527,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 'keep': 1,
                 'name': 'test',
                 'score': 0.9,
+                'mtag': 0
             }
             self.canvas.prop_meta_shapes.append(meta_shape)
         self.canvas.update()
