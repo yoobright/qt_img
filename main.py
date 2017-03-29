@@ -147,6 +147,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.tools = self.toolbar(u"Tools")
         self.tools.setMovable(False)
+        self.tools.setContextMenuPolicy(Qt.PreventContextMenu)
         self.statusBar().showMessage('test app started.')
         self.statusBar().show()
 
