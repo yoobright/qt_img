@@ -80,3 +80,15 @@ class LabelDialog(QDialog):
             text = tQListWidgetItem.text().strip()
         self.edit.setText(text)
         self.validate()
+
+    def keyPressEvent(self, ev):
+        key = ev.key()
+        if key == Qt.Key_Q and self.edit.text() == '' and \
+           self.listWidget.selectedItems()[0]:
+            try:
+                text = self.listWidget.selectedItems()[0].text().trimmed()
+            except AttributeError:
+                # PyQt5: AttributeError: 'str' object has no attribute 'trimmed'
+                text = self.listWidget.selectedItems()[0].text().strip()
+            self.edit.setText(text)
+            self.validate()

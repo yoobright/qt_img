@@ -158,7 +158,7 @@ class MainWindow(QMainWindow, WindowMixin):
         open_action = action('&Open File', self.openFile,
                              'Ctrl+O', None, u'Open image file')
         quit_action = action('&Quit', self.close,
-                             'Ctrl+Q', None, u'Quit application')
+                             None, None, u'Quit application')
         set_anno_action = action('Set XML Dir', self.setXMLDir,
                              None, None, u'Set XML Dir')
         fit_action = action('&Fit Window', self.fitWindowSize,
