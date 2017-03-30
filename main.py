@@ -11,6 +11,8 @@ from PyQt4.QtGui import *
 from m_widgets.canvas import Canvas
 from m_widgets.labelDialog import LabelDialog
 from m_utils.xmlFile import xmlFile
+from m_utils.m_io import NewReader
+from m_utils.utils import get_stat
 
 try:
     _fromUtf8 = QString.fromUtf8
@@ -164,9 +166,11 @@ class MainWindow(QMainWindow, WindowMixin):
 
         info_action = action('&Info', self.showInfo,
                              None, None, u'Info')
+        stat_action = action('&Stat', self.showStat,
+                             None, None, u'Info')
         # toolbar action
         draw_action = action('&Draw', self.draw,
-                             None, None, u'Draw')
+                             'D', None, u'Draw')
         draw_action.setCheckable(True)
         next_action = action('&Next', self.openNextImg,
                              'Right', None, u'Open Next')
@@ -194,6 +198,7 @@ class MainWindow(QMainWindow, WindowMixin):
             quit=quit_action,
             set_anno=set_anno_action,
             fit=fit_action,
+            stat= stat_action,
             info=info_action,
             draw=draw_action,
             next=next_action,
@@ -213,6 +218,7 @@ class MainWindow(QMainWindow, WindowMixin):
         addActions(self.menus.edit, (del_box_action, None,
                                      set_true_action, set_dev_action,
                                      set_error_action, res_box_action))
+        self.menuBar().addAction(stat_action)
         self.menuBar().addAction(info_action)
         # set canvas action
         addActions(self.canvas.menus, (del_box_action, None,
@@ -328,9 +334,9 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.loadXMLFile()
 
-    def loadXMLFile(self):
+    def getXMLFileName(self):
+        ret = None
         if self.xmlDir:
-            find = False
             name_list = [os.path.basename(self.imgFname),
                          os.path.splitext(os.path.basename(self.imgFname))[0]]
             xml_file = None
@@ -338,10 +344,13 @@ class MainWindow(QMainWindow, WindowMixin):
                 xml_file = os.path.join(self.xmlDir,
                                         name + ".xml").replace('\\', '/')
                 if os.path.exists(xml_file):
-                    find = True
+                    ret = xml_file
                     break
+        return ret
 
-            if find:
+    def loadXMLFile(self):
+            xml_file = self.getXMLFileName()
+            if xml_file:
                 self.status(u'find xml file', delay=1000)
                 self.xmlFname = xml_file
                 xml_file = xmlFile(self.xmlFname)
@@ -366,6 +375,12 @@ class MainWindow(QMainWindow, WindowMixin):
         #     if meta_shape['keep'] == 1:
         #         print()
         #         print(meta_shape['shape'].points)
+
+    def showStat(self):
+        xml_file = self.getXMLFileName()
+        if xml_file:
+            reader = NewReader(xml_file)
+            get_stat(reader)
 
     def openNextImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
