@@ -169,9 +169,9 @@ class MainWindow(QMainWindow, WindowMixin):
                              None, None, u'Draw')
         draw_action.setCheckable(True)
         next_action = action('&Next', self.openNextImg,
-                             None, None, u'Open Next')
+                             'Right', None, u'Open Next')
         prev_action = action('&Prev', self.openPrevImg,
-                             None, None, u'Open Prev')
+                             'Left', None, u'Open Prev')
         save_action = action('&Save', self.saveLabel,
                              'Ctrl+S', None, u'Save Label')
         test_action = action('&Test', self.testImg,
@@ -503,6 +503,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 if meta_shape['shape'] == self.canvas.selectedShape:
                     meta_shape['mtag'] = 4
                     break
+
     def resetBox(self):
         if self.canvas.selectedShape and \
             self.canvas.selectedShape.b_type == 'prop':
