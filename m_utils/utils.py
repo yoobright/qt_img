@@ -60,10 +60,13 @@ def get_stat(reader, a_threshold=0.8, d_threshold=0.1):
                            prop_keep_boxlist))
     miss_box = len(filter(lambda x: not x['find'], true_boxlist))
 
-    print('correct_box: {}'.format(correct_box))
-    print('deviation_box: {}'.format(deviation_box))
-    print('error_box: {}'.format(error_box))
-    print('miss_box: {}'.format(miss_box))
+    return {
+        'correct_box': correct_box,
+        'deviation_box': deviation_box,
+        'error_box': error_box,
+        'miss_box': miss_box
+    }
+
 
 
 

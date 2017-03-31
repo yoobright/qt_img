@@ -164,10 +164,14 @@ class MainWindow(QMainWindow, WindowMixin):
         fit_action = action('&Fit Window', self.fitWindowSize,
                              None, None, u'Fit window')
 
+        stat_action = action('&Pic Stat', self.showStat,
+                             None, None, u'Pic Stat')
+        all_stat_action = action('&All Stat', self.allStat,
+                             None, None, u'All Stat')
+
         info_action = action('&Info', self.showInfo,
                              None, None, u'Info')
-        stat_action = action('&Stat', self.showStat,
-                             None, None, u'Info')
+
         # toolbar action
         draw_action = action('&Draw', self.draw,
                              'D', None, u'Draw')
@@ -210,15 +214,15 @@ class MainWindow(QMainWindow, WindowMixin):
         tool = [prev_action, next_action, draw_action, save_action, test_action]
         addActions(self.tools, tool)
         # set menus action
-        self.menus = struct(file=self.menu('&File'),  view=self.menu('&View'),
-                            edit=self.menu('&Edit'))
+        self.menus = struct(file=self.menu('&File'), view=self.menu('&View'),
+                            edit=self.menu('&Edit'), stat=self.menu('&Stat'))
         addActions(self.menus.file, (open_action, set_anno_action,
                                      None, quit_action))
         addActions(self.menus.view, (fit_action,))
         addActions(self.menus.edit, (del_box_action, None,
                                      set_true_action, set_dev_action,
                                      set_error_action, res_box_action))
-        self.menuBar().addAction(stat_action)
+        addActions(self.menus.stat, (stat_action, all_stat_action))
         self.menuBar().addAction(info_action)
         # set canvas action
         addActions(self.canvas.menus, (del_box_action, None,
@@ -226,7 +230,7 @@ class MainWindow(QMainWindow, WindowMixin):
                                        set_error_action, res_box_action))
 
     def scanAllImages(self, folderPath):
-        extensions = ['.jpeg','.jpg', '.png', '.bmp']
+        extensions = ['.jpeg', '.jpg', '.png', '.bmp']
         images = []
         for root, dirs, files in os.walk(folderPath):
             for file in files:
@@ -334,14 +338,18 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.loadXMLFile()
 
-    def getXMLFileName(self):
+    def getXMLFileName(self, image_name=None, xml_dir=None):
         ret = None
-        if self.xmlDir:
-            name_list = [os.path.basename(self.imgFname),
-                         os.path.splitext(os.path.basename(self.imgFname))[0]]
+        if image_name is None:
+            image_name = self.imgFname
+        if xml_dir is None:
+            xml_dir = self.xmlDir
+        if xml_dir:
+            name_list = [os.path.basename(image_name),
+                         os.path.splitext(os.path.basename(image_name))[0]]
             xml_file = None
             for name in name_list:
-                xml_file = os.path.join(self.xmlDir,
+                xml_file = os.path.join(xml_dir,
                                         name + ".xml").replace('\\', '/')
                 if os.path.exists(xml_file):
                     ret = xml_file
@@ -380,7 +388,29 @@ class MainWindow(QMainWindow, WindowMixin):
         xml_file = self.getXMLFileName()
         if xml_file:
             reader = NewReader(xml_file)
-            get_stat(reader)
+            stat = get_stat(reader)
+            print(stat)
+
+    def allStat(self):
+        all_stat = {
+        'correct_box': 0,
+        'deviation_box': 0,
+        'error_box': 0,
+        'miss_box': 0,
+        }
+
+        for image_name in self.imageList:
+            xml_file = self.getXMLFileName(image_name)
+            if xml_file:
+                reader = NewReader(xml_file)
+                stat = get_stat(reader, a_threshold=0.6)
+                all_stat['correct_box'] += stat['correct_box']
+                all_stat['deviation_box'] += stat['deviation_box']
+                all_stat['error_box'] += stat['error_box']
+                all_stat['miss_box'] += stat['miss_box']
+
+        print(all_stat)
+
 
     def openNextImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
