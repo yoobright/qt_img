@@ -82,8 +82,8 @@ class LabelDialog(QDialog):
         self.validate()
 
     def keyPressEvent(self, ev):
+        super(LabelDialog, self).keyPressEvent(ev)
         key = ev.key()
-        print key
         if key == Qt.Key_D and self.edit.text() == '' and \
            len(self.listWidget.selectedItems()) > 0:
             try:
@@ -93,3 +93,4 @@ class LabelDialog(QDialog):
                 text = self.listWidget.selectedItems()[0].text().strip()
             self.edit.setText(text)
             self.validate()
+
