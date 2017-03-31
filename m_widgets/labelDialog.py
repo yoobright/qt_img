@@ -83,8 +83,9 @@ class LabelDialog(QDialog):
 
     def keyPressEvent(self, ev):
         key = ev.key()
-        if key == Qt.Key_Q and self.edit.text() == '' and \
-           self.listWidget.selectedItems()[0]:
+        print key
+        if key == Qt.Key_D and self.edit.text() == '' and \
+           len(self.listWidget.selectedItems()) > 0:
             try:
                 text = self.listWidget.selectedItems()[0].text().trimmed()
             except AttributeError:
