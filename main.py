@@ -29,7 +29,6 @@ def u(s):
 
 __appname__ = 'qt_img'
 
-
 class ToolBar(QToolBar):
     def __init__(self, title):
         super(ToolBar, self).__init__(title)
@@ -230,15 +229,14 @@ class MainWindow(QMainWindow, WindowMixin):
                                        set_error_action, res_box_action))
 
     def scanAllImages(self, folderPath):
-        extensions = ['.jpeg', '.jpg', '.png', '.bmp']
+        name_filter = ['*.jpeg', '*.jpg', '*.png', '*.bmp']
         images = []
-        for root, dirs, files in os.walk(folderPath):
-            for file in files:
-                if file.lower().endswith(tuple(extensions)):
-                    relatviePath = os.path.join(root, file)
-                    path = u(os.path.abspath(relatviePath))
-                    images.append(path)
-        images.sort(key=lambda x: x.lower())
+        file_dir = QDir(folderPath)
+        file_dir.setNameFilters(name_filter)
+        file_dir.setSorting(QDir.Name)
+
+        images = [u(os.path.abspath(os.path.join(folderPath, str(image))))
+                  for image in file_dir.entryList()]
         # for windows dir
         images = [x.replace('\\', '/') for x in images]
         return images
@@ -398,18 +396,18 @@ class MainWindow(QMainWindow, WindowMixin):
         'error_box': 0,
         'miss_box': 0,
         }
+        if len(self.imageList) > 0:
+            for image_name in self.imageList:
+                xml_file = self.getXMLFileName(image_name)
+                if xml_file:
+                    reader = NewReader(xml_file)
+                    stat = get_stat(reader, a_threshold=0.6)
+                    all_stat['correct_box'] += stat['correct_box']
+                    all_stat['deviation_box'] += stat['deviation_box']
+                    all_stat['error_box'] += stat['error_box']
+                    all_stat['miss_box'] += stat['miss_box']
 
-        for image_name in self.imageList:
-            xml_file = self.getXMLFileName(image_name)
-            if xml_file:
-                reader = NewReader(xml_file)
-                stat = get_stat(reader, a_threshold=0.6)
-                all_stat['correct_box'] += stat['correct_box']
-                all_stat['deviation_box'] += stat['deviation_box']
-                all_stat['error_box'] += stat['error_box']
-                all_stat['miss_box'] += stat['miss_box']
-
-        print(all_stat)
+            print(all_stat)
 
 
     def openNextImg(self):

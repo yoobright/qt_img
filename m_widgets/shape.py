@@ -25,6 +25,12 @@ class Shape(object):
         self.selected = False
         self.b_type = b_type
 
+    def __getitem__(self, key):
+        return self.__dict__[key]
+
+    def __setitem__(self, key, item):
+        self.__dict__[key] = item
+
     @property
     def points(self):
         if (self.xmin is not None) and (self.ymin is not None) and \
@@ -133,3 +139,36 @@ class Shape(object):
     # def __setitem__(self, key, value):
     #     self.points[key] = value
 
+
+class TrueMixin():
+    def __init__(self, *args, **kwargs):
+        print("mixin")
+        self.mtag = 0
+
+
+class PropMixin():
+    def __init__(self, *args, **kwargs):
+        print("mixin")
+        self.mtag = 0
+        self.keep = 0
+        self.score = 0
+
+
+class TrueShape(Shape, TrueMixin):
+    def __init__(self, name=None, *args, **kwargs):
+        for base in self.__class__.__bases__:
+            if hasattr(base, '__init__'):
+                if base.__name__ == 'Shape':
+                    base.__init__(self, name, 'true')
+                else:
+                    base.__init__(self, *args, **kwargs)
+
+
+class PropShape(Shape, PropMixin):
+    def __init__(self, name=None, *args, **kwargs):
+        for base in self.__class__.__bases__:
+            if hasattr(base, '__init__'):
+                if base.__name__ == 'Shape':
+                    base.__init__(self, name, 'prop')
+                else:
+                    base.__init__(self, *args, **kwargs)

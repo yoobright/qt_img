@@ -229,8 +229,14 @@ class NewReader:
     def parseXML(self):
         assert self.filepath.endswith('.xml'), "Unsupport file format"
         parser = etree.XMLParser(encoding='utf-8')
-        xmltree = ElementTree.parse(self.filepath, parser=parser).getroot()
-        # filename = xmltree.find('filename').text
+        try:
+            xmltree = ElementTree.parse(self.filepath, parser=parser).getroot()
+        except Exception as ex:
+            if ex == etree.XMLSyntaxError:
+                print('XMLSyntaxError! '
+                      'can not parse xml file: {}'.format(self.filepath))
+            else:
+                raise ex
 
         for object_iter in xmltree.findall('object'):
             bndbox = object_iter.find("bndbox")
