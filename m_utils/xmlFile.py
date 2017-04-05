@@ -4,7 +4,7 @@ from __future__ import print_function, division
 from PyQt4.QtCore import *
 
 from m_io import NewReader
-from m_widgets.shape import Shape
+from m_widgets.shape import TrueShape, PropShape
 
 '''
 in meta shapes, data format like
@@ -25,48 +25,22 @@ class xmlFile(object):
 
     def covert_shape(self):
         for box in self.reader.true_boxlist:
-            shape = Shape(box['name'], b_type='true')
+            shape = TrueShape(box['name'])
             shape.xmin = box['xmin']
             shape.ymin = box['ymin']
             shape.xmax = box['xmax']
             shape.ymax = box['ymax']
-            # shape.addPoint(QPoint(box['xmin'], box['ymin']))
-            # shape.addPoint(QPoint(box['xmax'], box['ymin']))
-            # shape.addPoint(QPoint(box['xmax'], box['ymax']))
-            # shape.addPoint(QPoint(box['xmin'], box['ymax']))
-            meta_shape = {
-                'shape': shape,
-                'name': box['name'],
-                'mtag': 0
-                # 'xmin': box['xmin'],
-                # 'ymin': box['ymin'],
-                # 'xmax': box['xmax'],
-                # 'ymax': box['ymax']
-            }
-            self.true_meta_shapes.append(meta_shape)
+            self.true_meta_shapes.append(shape)
 
         for box in self.reader.prop_boxlist:
-            shape = Shape(box['name'], b_type='prop')
+            shape = PropShape(box['name'])
             shape.xmin = box['xmin']
             shape.ymin = box['ymin']
             shape.xmax = box['xmax']
             shape.ymax = box['ymax']
-            # shape.addPoint(QPoint(box['xmin'], box['ymin']))
-            # shape.addPoint(QPoint(box['xmax'], box['ymin']))
-            # shape.addPoint(QPoint(box['xmax'], box['ymax']))
-            # shape.addPoint(QPoint(box['xmin'], box['ymax']))
-            meta_shape = {
-                'shape': shape,
-                'name': box['name'],
-                'score': box['score'],
-                'keep': box['keep'],
-                'mtag': 0
-                # 'xmin': box['xmin'],
-                # 'ymin': box['ymin'],
-                # 'xmax': box['xmax'],
-                # 'ymax': box['ymax']
-            }
-            self.prop_meta_shapes.append(meta_shape)
+            shape.score = box['score']
+            shape.keep = box['score']
+            self.prop_meta_shapes.append(shape)
 
 # if __name__ == '__main__':
 #     test = xmlFile('../test/anno/grp09_1280x720_00000.jpg.xml')

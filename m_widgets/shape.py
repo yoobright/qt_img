@@ -142,13 +142,11 @@ class Shape(object):
 
 class TrueMixin():
     def __init__(self, *args, **kwargs):
-        print("mixin")
         self.mtag = 0
 
 
 class PropMixin():
     def __init__(self, *args, **kwargs):
-        print("mixin")
         self.mtag = 0
         self.keep = 0
         self.score = 0
@@ -163,6 +161,11 @@ class TrueShape(Shape, TrueMixin):
                 else:
                     base.__init__(self, *args, **kwargs)
 
+    def __repr__(self):
+        ret = "<shape {}: id:{}, name:{}>".format(
+            self.b_type, id(self), self.name)
+        return ret
+
 
 class PropShape(Shape, PropMixin):
     def __init__(self, name=None, *args, **kwargs):
@@ -172,3 +175,8 @@ class PropShape(Shape, PropMixin):
                     base.__init__(self, name, 'prop')
                 else:
                     base.__init__(self, *args, **kwargs)
+
+    def __repr__(self):
+        ret = "<shape {}: id:{}, name:{}, score:{}, keep:{}>".format(
+            self.b_type, id(self), self.name, self.score, self.keep)
+        return ret

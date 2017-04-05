@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from math import sqrt, floor
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
-from shape import Shape
+from shape import Shape, TrueShape
 from m_utils.m_io import NewWriter
 from m_utils.utils import compute_iou
 from m_utils.utils import read, distance
@@ -42,8 +42,8 @@ class Canvas(QWidget):
         super(Canvas, self).__init__(*args, **kwargs)
         self.mode = EDIT
         self.keep_only = True
-        self.true_meta_shapes = []
-        self.prop_meta_shapes = []
+        self.true_shapes = []
+        self.prop_shapes = []
         self.current_shape = None
         self.rect_points = None
         self._cursor = CURSOR_DEFAULT
@@ -142,28 +142,27 @@ class Canvas(QWidget):
         p.end()
 
     def paintTrueShape(self, painter):
-        for meta_shape in self.true_meta_shapes:
-            shape = meta_shape['shape']
-            if (meta_shape == self.htShape or shape.selected):
+        for shape in self.true_shapes:
+            if shape == self.htShape or shape.selected:
                 shape.fill = True
             else:
                 shape.fill = False
             shape.paint(painter)
 
     def paintPropShape(self, painter):
-        for meta_shape in self.prop_meta_shapes:
-            if meta_shape['mtag']:
+        for shape in self.prop_shapes:
+            if shape['mtag']:
                 pen = getRectStyle(PROP_D_STYLE)
             else:
-                pen = getRectStyle(PROP_1_STYLE, meta_shape['keep'])
-            shape = meta_shape['shape']
-            if (meta_shape == self.hpShape or shape.selected) and \
-                            meta_shape['keep'] == 1:
+                pen = getRectStyle(PROP_1_STYLE, shape['keep'])
+
+            if (shape == self.hpShape or shape.selected) and \
+                            shape['keep'] == 1:
                 shape.fill = True
             else:
                 shape.fill = False
             if self.keep_only:
-                if meta_shape['keep'] == 1:
+                if shape['keep'] == 1:
                     shape.paint(painter, pen=pen)
             else:
                 shape.paint(painter, pen=pen)
@@ -208,8 +207,8 @@ class Canvas(QWidget):
 
     def computeShapeIOU(self, meta_shape):
         ret = 0.0
-        for true_meta_shape in self.true_meta_shapes:
-            ret = max(ret, compute_iou(meta_shape, true_meta_shape))
+        for true_shape in self.true_shapes:
+            ret = max(ret, compute_iou(meta_shape, true_shape))
         return ret
 
     def mouseMoveEvent(self, ev):
@@ -277,10 +276,10 @@ class Canvas(QWidget):
                     if pos.x() > self.selectedShape.xmin + 5:
                         self.selectedShape.xmax = int(pos.x())
 
-            for meta_shape in reversed([s for s in self.prop_meta_shapes]):
-                if meta_shape['shape'].containsPoint(pos) and \
-                                meta_shape['keep'] == 1:
-                    self.hpShape = meta_shape
+            for shape in reversed([s for s in self.prop_shapes]):
+                if shape.containsPoint(pos) and \
+                                shape['keep'] == 1:
+                    self.hpShape = shape
                     self.update()
                     break
             else:
@@ -288,9 +287,9 @@ class Canvas(QWidget):
                     self.update()
                 self.hpShape = None
 
-            for meta_shape in reversed([s for s in self.true_meta_shapes]):
-                if meta_shape['shape'].containsPoint(pos):
-                    self.htShape = meta_shape
+            for shape in reversed([s for s in self.true_shapes]):
+                if shape.containsPoint(pos):
+                    self.htShape = shape
                     self.hpShape = None
                     self.update()
                     break
@@ -366,28 +365,16 @@ class Canvas(QWidget):
             xmax = int(self.rect_points[1].x())
             ymax = int(self.rect_points[1].y())
             name = self.current_shape.name
-            self.current_shape.b_type = 'true'
-            self.current_shape.xmin = xmin
-            self.current_shape.ymin = ymin
-            self.current_shape.xmax = xmax
-            self.current_shape.ymax = ymax
-            # self.current_shape.addPoint(QPoint(xmin, ymin))
-            # self.current_shape.addPoint(QPoint(xmax, ymin))
-            # self.current_shape.addPoint(QPoint(xmax, ymax))
-            # self.current_shape.addPoint(QPoint(xmin, ymax))
-            meta_shape = {
-                'shape': self.current_shape,
-                'name': name,
-                # 'xmin': xmin,
-                # 'ymin': ymin,
-                # 'xmax': xmax,
-                # 'ymax': ymax
-            }
+            shape = TrueShape(name)
+            shape.xmin = xmin
+            shape.ymin = ymin
+            shape.xmax = xmax
+            shape.ymax = ymax
             if self.isSelectedPropShape():
-                meta_shape['mtag'] = 2
+                shape['mtag'] = 2
             else:
-                meta_shape['mtag'] = 3
-            self.true_meta_shapes.append(meta_shape)
+                shape['mtag'] = 3
+            self.true_shapes.append(shape)
 
     def deSelectShape(self):
         if self.selectedShape:
@@ -397,27 +384,26 @@ class Canvas(QWidget):
 
     def selectShapePoint(self, point):
         self.deSelectShape()
-        for meta_shape in reversed([s for s in self.prop_meta_shapes]):
-            if meta_shape['shape'].containsPoint(point) and \
-                                meta_shape['keep'] == 1:
-                meta_shape['shape'].selected = True
-                self.selectedShape = meta_shape['shape']
+        for shape in reversed([s for s in self.prop_shapes]):
+            if shape.containsPoint(point) and shape.keep == 1:
+                shape.selected = True
+                self.selectedShape = shape
                 self.update()
                 break
 
-        for meta_shape in reversed([s for s in self.true_meta_shapes]):
-            if meta_shape['shape'].nearShape(point):
+        for shape in reversed([s for s in self.true_shapes]):
+            if shape.nearShape(point):
                 self.deSelectShape()
-                meta_shape['shape'].selected = True
-                self.selectedShape = meta_shape['shape']
+                shape.selected = True
+                self.selectedShape = shape
                 self.update()
                 break
 
 
     def loadPixmap(self, pixmap):
         self.pixmap = pixmap
-        self.true_meta_shapes = []
-        self.prop_meta_shapes = []
+        self.true_shapes = []
+        self.prop_shapes = []
         self.repaint()
 
     def overrideCursor(self, cursor):
@@ -461,30 +447,30 @@ class Canvas(QWidget):
             img_size = (self.pixmap.height(), self.pixmap.width(), 3)
             writer = NewWriter(img_name, img_size)
 
-            for meta_shape in self.true_meta_shapes:
-                if 'mtag' in meta_shape.keys():
-                    mtag = meta_shape['mtag']
+            for shape in self.true_shapes:
+                if shape.mtag:
+                    mtag = shape.mtag
                 else:
                     mtag =None
-                writer.addTrueBox(meta_shape['shape'].xmin,
-                                  meta_shape['shape'].ymin,
-                                  meta_shape['shape'].xmax,
-                                  meta_shape['shape'].ymax,
-                                  meta_shape['name'],
+                writer.addTrueBox(shape.xmin,
+                                  shape.ymin,
+                                  shape.xmax,
+                                  shape.ymax,
+                                  shape.name,
                                   mtag)
 
-            for meta_shape in self.prop_meta_shapes:
-                if 'mtag' in meta_shape.keys():
-                    mtag = meta_shape['mtag']
+            for shape in self.prop_shapes:
+                if shape.mtag:
+                    mtag = shape.mtag
                 else:
                     mtag =None
-                writer.addPropBox(meta_shape['shape'].xmin,
-                                  meta_shape['shape'].ymin,
-                                  meta_shape['shape'].xmax,
-                                  meta_shape['shape'].ymax,
-                                  meta_shape['name'],
-                                  meta_shape['score'],
-                                  meta_shape['keep'],
+                writer.addPropBox(shape.xmin,
+                                  shape.ymin,
+                                  shape.xmax,
+                                  shape.ymax,
+                                  shape.name,
+                                  shape.score,
+                                  shape.keep,
                                   mtag)
             print(writer.save(dir_path))
 

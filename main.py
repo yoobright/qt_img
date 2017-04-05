@@ -9,6 +9,7 @@ from functools import partial
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from m_widgets.canvas import Canvas
+from m_widgets.shape import TrueShape
 from m_widgets.labelDialog import LabelDialog
 from m_utils.xmlFile import xmlFile
 from m_utils.m_io import NewReader
@@ -360,8 +361,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 self.status(u'find xml file', delay=1000)
                 self.xmlFname = xml_file
                 xml_file = xmlFile(self.xmlFname)
-                self.canvas.true_meta_shapes = xml_file.true_meta_shapes
-                self.canvas.prop_meta_shapes = xml_file.prop_meta_shapes
+                self.canvas.true_shapes = xml_file.true_meta_shapes
+                self.canvas.prop_shapes = xml_file.prop_meta_shapes
                 self.canvas.update()
             else:
                 self.status(u'can not find xml file', delay=3000)
@@ -374,8 +375,8 @@ class MainWindow(QMainWindow, WindowMixin):
         print("xmlDir: {}".format(self.xmlDir))
         print("xmlFname: {}".format(self.xmlFname))
         print("curr_canvas_scale: {}".format(self.curr_canvas_scale))
-        print("true_meta_shapes: {}".format(self.canvas.true_meta_shapes))
-        print("prop_meta_shapes: {}".format(self.canvas.prop_meta_shapes))
+        print("true_meta_shapes: {}".format(self.canvas.true_shapes))
+        print("prop_meta_shapes: {}".format(self.canvas.prop_shapes))
         print("selectedShape: {}".format(self.canvas.selectedShape))
         # for meta_shape in reversed([s for s in self.canvas.prop_meta_shapes]):
         #     if meta_shape['keep'] == 1:
@@ -515,74 +516,53 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def setTrueBox(self):
         if self.canvas.selectedShape and \
-            self.canvas.selectedShape.b_type == 'prop':
-            for meta_shape in self.canvas.prop_meta_shapes:
-                if meta_shape['shape'] == self.canvas.selectedShape:
-                    meta_shape['mtag'] = 1
-                    break
-            newShape = deepcopy(self.canvas.selectedShape)
-            newShape.b_type ='true'
-            newShape.selected = False
-            meta_shape = {
-                'shape': newShape,
-                'name':  newShape.name,
-                'mtag': 1
-            }
-            self.canvas.true_meta_shapes.append(meta_shape)
+           self.canvas.selectedShape.b_type == 'prop':
+            self.canvas.selectedShape.mtag = 1
+            newShape = TrueShape(self.canvas.selectedShape.name)
+            newShape.xmin = self.canvas.selectedShape.xmin
+            newShape.ymin = self.canvas.selectedShape.ymin
+            newShape.xmax = self.canvas.selectedShape.xmax
+            newShape.ymax = self.canvas.selectedShape.ymax
+            self.canvas.true_shapes.append(newShape)
             self.canvas.update()
 
     def setDevBox(self):
         if self.canvas.selectedShape and \
-            self.canvas.selectedShape.b_type == 'prop':
-            for meta_shape in self.canvas.prop_meta_shapes:
-                if meta_shape['shape'] == self.canvas.selectedShape:
-                    meta_shape['mtag'] = 2
-                    break
+           self.canvas.selectedShape.b_type == 'prop':
+            self.canvas.selectedShape.mtag = 2
 
     def setErrorBox(self):
         if self.canvas.selectedShape and \
-            self.canvas.selectedShape.b_type == 'prop':
-            for meta_shape in self.canvas.prop_meta_shapes:
-                if meta_shape['shape'] == self.canvas.selectedShape:
-                    meta_shape['mtag'] = 4
-                    break
+           self.canvas.selectedShape.b_type == 'prop':
+            self.canvas.selectedShape.mtag = 4
 
     def resetBox(self):
         if self.canvas.selectedShape and \
-            self.canvas.selectedShape.b_type == 'prop':
-            for meta_shape in self.canvas.prop_meta_shapes:
-                if meta_shape['shape'] == self.canvas.selectedShape:
-                    meta_shape['mtag'] = 0
-                    break
+           self.canvas.selectedShape.b_type == 'prop':
+            self.canvas.selectedShape.mtag = 0
 
     def delBox(self):
         if self.canvas.selectedShape and \
-            self.canvas.selectedShape.b_type == 'true':
-            for meta_shape in self.canvas.true_meta_shapes:
-                if meta_shape['shape'] == self.canvas.selectedShape:
-                    self.canvas.true_meta_shapes.remove(meta_shape)
+           self.canvas.selectedShape.b_type == 'true':
+            for shape in self.canvas.true_shapes:
+                if shape == self.canvas.selectedShape:
+                    self.canvas.true_shapes.remove(shape)
                     break
             self.canvas.update()
 
 
     def testImg(self):
-        from m_widgets.shape import Shape
+        from m_widgets.shape import PropShape
         # if len(self.canvas.true_meta_shapes) < 1:
         if 1:
-            test_shape = Shape('test')
-            test_shape.b_type = 'prop'
+            test_shape = PropShape('test')
             test_shape.xmin = 100
             test_shape.ymin = 100
             test_shape.xmax = 200
             test_shape.ymax = 200
-            meta_shape = {
-                'shape': test_shape,
-                'keep': 1,
-                'name': 'test',
-                'score': 0.9,
-                'mtag': 0
-            }
-            self.canvas.prop_meta_shapes.append(meta_shape)
+            test_shape.keep = 1
+            test_shape.score = 0.9
+            self.canvas.prop_shapes.append(test_shape)
         self.canvas.update()
 
 
