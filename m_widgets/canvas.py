@@ -35,6 +35,7 @@ class Canvas(QWidget):
     zoomRequest = pyqtSignal(int, QPointF)
     mouseMoveSignal = pyqtSignal(str)
     newShape = pyqtSignal()
+    selectionChanged = pyqtSignal(bool)
 
     epsilon = 11.0
 
@@ -207,8 +208,8 @@ class Canvas(QWidget):
 
     def computeShapeIOU(self, meta_shape):
         ret = 0.0
-        for true_shape in self.true_shapes:
-            ret = max(ret, compute_iou(meta_shape, true_shape))
+        for true_meta_shape in self.true_shapes:
+            ret = max(ret, compute_iou(meta_shape, true_meta_shape))
         return ret
 
     def mouseMoveEvent(self, ev):
@@ -380,6 +381,7 @@ class Canvas(QWidget):
         if self.selectedShape:
             self.selectedShape.selected = False
             self.selectedShape = None
+            self.selectionChanged.emit(False)
             self.update()
 
     def selectShapePoint(self, point):
@@ -398,6 +400,9 @@ class Canvas(QWidget):
                 self.selectedShape = shape
                 self.update()
                 break
+
+        self.selectionChanged.emit(bool(self.selectedShape))
+
 
 
     def loadPixmap(self, pixmap):

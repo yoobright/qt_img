@@ -135,6 +135,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.zoomRequest.connect(self.zoomRequest)
         self.canvas.mouseMoveSignal.connect(self.statusBar().showMessage)
         self.canvas.newShape.connect(self.newShape)
+        self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
 
         self.labelDialog = LabelDialog(parent=self, listItem=['head', 'person'])
         self.labelDialog.setWindowTitle('label')
@@ -202,13 +203,16 @@ class MainWindow(QMainWindow, WindowMixin):
             quit=quit_action,
             set_anno=set_anno_action,
             fit=fit_action,
-            stat= stat_action,
+            stat=stat_action,
             info=info_action,
             draw=draw_action,
             next=next_action,
             prev=prev_action,
+            del_box=del_box_action,
             set_true=set_true_action,
-            set_error=set_error_action
+            set_dev=set_dev_action,
+            set_error=set_error_action,
+            res_box=res_box_action,
         )
         # set tools
         tool = [prev_action, next_action, draw_action, save_action, test_action]
@@ -486,6 +490,22 @@ class MainWindow(QMainWindow, WindowMixin):
             # print(self.scroll.pos())
             # print(self.canvas.pos())
             self.curr_canvas_scale = self.canvas.scale
+
+    def shapeSelectionChanged(self, selected=False):
+        self.actions.del_box.setEnabled(False)
+        self.actions.set_true.setEnabled(False)
+        self.actions.set_dev.setEnabled(False)
+        self.actions.set_error.setEnabled(False)
+        self.actions.res_box.setEnabled(False)
+        if selected:
+            if self.canvas.selectedShape.b_type == 'true':
+                 self.actions.del_box.setEnabled(True)
+            elif self.canvas.selectedShape.b_type == 'prop':
+                self.actions.set_true.setEnabled(True)
+                self.actions.set_dev.setEnabled(True)
+                self.actions.set_error.setEnabled(True)
+                self.actions.res_box.setEnabled(True)
+
 
 
     def newShape(self):
