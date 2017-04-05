@@ -122,7 +122,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.imageDir = None
         self.imageList = None
         self.imageIdx = None
+        self.multiXml = False
         self.xmlDir = None
+        self.annoList = None
         self.xmlFname = None
 
         QWidget.__init__(self, parent)
@@ -162,6 +164,10 @@ class MainWindow(QMainWindow, WindowMixin):
                              None, None, u'Quit application')
         set_anno_action = action('Set XML Dir', self.setXMLDir,
                              None, None, u'Set XML Dir')
+
+        set_m_anno_action = action('Set Multi XML Dir', self.setMultiXMLDir,
+                             None, None, u'Set Multi XML Dir')
+
         fit_action = action('&Fit Window', self.fitWindowSize,
                              None, None, u'Fit window')
 
@@ -202,6 +208,7 @@ class MainWindow(QMainWindow, WindowMixin):
             open=open_action,
             quit=quit_action,
             set_anno=set_anno_action,
+            set_m_anno=set_m_anno_action,
             fit=fit_action,
             stat=stat_action,
             info=info_action,
@@ -220,7 +227,9 @@ class MainWindow(QMainWindow, WindowMixin):
         # set menus action
         self.menus = struct(file=self.menu('&File'), view=self.menu('&View'),
                             edit=self.menu('&Edit'), stat=self.menu('&Stat'))
-        addActions(self.menus.file, (open_action, set_anno_action,
+        addActions(self.menus.file, (open_action,
+                                     set_anno_action,
+                                     set_m_anno_action,
                                      None, quit_action))
         addActions(self.menus.view, (fit_action,))
         addActions(self.menus.edit, (del_box_action, None,
@@ -328,6 +337,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.curr_canvas_scale = self.canvas.scale
 
     def setXMLDir(self):
+        self.annoList = None
         curr_path = os.path.dirname(self.imgFname) \
                 if self.imgFname else '.'
 
@@ -337,9 +347,30 @@ class MainWindow(QMainWindow, WindowMixin):
 
         if dir_path is not None and len(dir_path) > 1:
             dir_path = dir_path.replace('\\', '/')
+            self.multiXml = False
             self.xmlDir = dir_path
 
         self.loadXMLFile()
+
+    def setMultiXMLDir(self):
+        curr_path = os.path.dirname(self.imgFname) \
+                if self.imgFname else '.'
+
+        dir_path = str(QFileDialog.getExistingDirectory(self,
+            '%s - Open Directory' % __appname__,  curr_path,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
+
+        if dir_path is not None and len(dir_path) > 1:
+            dir_path = dir_path.replace('\\', '/')
+            self.multiXml = True
+            self.xmlDir = dir_path
+            file_dir = QDir(dir_path)
+            file_dir.setFilter(QDir.Dirs | QDir.NoDotAndDotDot)
+            file_dir.setSorting(QDir.Name)
+            self.annoList = [str(x) for x in file_dir.entryList()]
+            if len(self.annoList) > 0:
+                print(self.annoList)
+
 
     def getXMLFileName(self, image_name=None, xml_dir=None):
         ret = None
