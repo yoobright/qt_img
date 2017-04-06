@@ -39,7 +39,7 @@ class xmlFile(object):
             shape.xmax = box['xmax']
             shape.ymax = box['ymax']
             shape.score = box['score']
-            shape.keep = box['score']
+            shape.keep = box['keep']
             self.prop_meta_shapes.append(shape)
 
 # if __name__ == '__main__':

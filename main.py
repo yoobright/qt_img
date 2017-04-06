@@ -337,6 +337,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.curr_canvas_scale = self.canvas.scale
 
     def setXMLDir(self):
+        self.multiXml = False
         self.annoList = None
         curr_path = os.path.dirname(self.imgFname) \
                 if self.imgFname else '.'
@@ -347,7 +348,6 @@ class MainWindow(QMainWindow, WindowMixin):
 
         if dir_path is not None and len(dir_path) > 1:
             dir_path = dir_path.replace('\\', '/')
-            self.multiXml = False
             self.xmlDir = dir_path
 
         self.loadXMLFile()
@@ -369,13 +369,17 @@ class MainWindow(QMainWindow, WindowMixin):
             file_dir.setSorting(QDir.Name)
             self.annoList = [str(x) for x in file_dir.entryList()]
             if len(self.annoList) > 0:
-                print(self.annoList)
+                 self.loadXMLFile()
+            else:
+                print('multi dir does not exist')
 
 
     def getXMLFileName(self, image_name=None, xml_dir=None):
         ret = None
-        if image_name is None:
+        if image_name is None and self.imgFname:
             image_name = self.imgFname
+        else:
+            return ret
         if xml_dir is None:
             xml_dir = self.xmlDir
         if xml_dir:
@@ -391,16 +395,25 @@ class MainWindow(QMainWindow, WindowMixin):
         return ret
 
     def loadXMLFile(self):
-            xml_file = self.getXMLFileName()
-            if xml_file:
-                self.status(u'find xml file', delay=1000)
-                self.xmlFname = xml_file
-                xml_file = xmlFile(self.xmlFname)
-                self.canvas.true_shapes = xml_file.true_meta_shapes
-                self.canvas.prop_shapes = xml_file.prop_meta_shapes
-                self.canvas.update()
+            if self.multiXml:
+                xml_list = []
+                for f in self.annoList:
+                    xml_dir = os.path.join(self.xmlDir, f).replace('\\', '/')
+                    xml_file = self.getXMLFileName(xml_dir=xml_dir)
+                    if xml_file:
+                        xml_list.append(xml_file)
+                print(xml_list)
             else:
-                self.status(u'can not find xml file', delay=3000)
+                xml_file = self.getXMLFileName()
+                if xml_file:
+                    self.status(u'find xml file', delay=1000)
+                    self.xmlFname = xml_file
+                    xml_file = xmlFile(self.xmlFname)
+                    self.canvas.true_shapes = xml_file.true_meta_shapes
+                    self.canvas.prop_shapes.append(xml_file.prop_meta_shapes)
+                    self.canvas.update()
+                else:
+                    self.status(u'can not find xml file', delay=3000)
 
 
     def showInfo(self):
@@ -613,7 +626,7 @@ class MainWindow(QMainWindow, WindowMixin):
             test_shape.ymax = 200
             test_shape.keep = 1
             test_shape.score = 0.9
-            self.canvas.prop_shapes.append(test_shape)
+            self.canvas.prop_shapes.append([test_shape])
         self.canvas.update()
 
 

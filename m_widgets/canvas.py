@@ -151,22 +151,26 @@ class Canvas(QWidget):
             shape.paint(painter)
 
     def paintPropShape(self, painter):
-        for shape in self.prop_shapes:
-            if shape['mtag']:
-                pen = getRectStyle(PROP_D_STYLE)
-            else:
-                pen = getRectStyle(PROP_1_STYLE, shape['keep'])
+        for i, prop in enumerate(self.prop_shapes):
+            if i > 7:
+                print('out of max prop list len')
+                break
+            for shape in prop:
+                if shape['mtag']:
+                    pen = getRectStyle(PROP_D_STYLE)
+                else:
+                    pen = getRectStyle(i + 1, shape['keep'])
 
-            if (shape == self.hpShape or shape.selected) and \
-                            shape['keep'] == 1:
-                shape.fill = True
-            else:
-                shape.fill = False
-            if self.keep_only:
-                if shape['keep'] == 1:
+                if (shape == self.hpShape or shape.selected) and \
+                   shape['keep'] == 1:
+                    shape.fill = True
+                else:
+                    shape.fill = False
+                if self.keep_only:
+                    if shape['keep'] == 1:
+                        shape.paint(painter, pen=pen)
+                else:
                     shape.paint(painter, pen=pen)
-            else:
-                shape.paint(painter, pen=pen)
 
     def paintRect(self, painter):
         leftTop = self.rect_points[0]
@@ -277,16 +281,22 @@ class Canvas(QWidget):
                     if pos.x() > self.selectedShape.xmin + 5:
                         self.selectedShape.xmax = int(pos.x())
 
-            for shape in reversed([s for s in self.prop_shapes]):
-                if shape.containsPoint(pos) and \
-                                shape['keep'] == 1:
-                    self.hpShape = shape
-                    self.update()
+            for i, prop in enumerate(reversed(self.prop_shapes)):
+                find = False
+                for shape in reversed([s for s in prop]):
+                    if shape.containsPoint(pos) and \
+                                    shape['keep'] == 1:
+                        self.hpShape = shape
+                        self.update()
+                        find = True
+                        break
+                else:
+                    if self.hpShape:
+                        self.update()
+                    self.hpShape = None
+
+                if find:
                     break
-            else:
-                if self.hpShape:
-                    self.update()
-                self.hpShape = None
 
             for shape in reversed([s for s in self.true_shapes]):
                 if shape.containsPoint(pos):
@@ -386,11 +396,16 @@ class Canvas(QWidget):
 
     def selectShapePoint(self, point):
         self.deSelectShape()
-        for shape in reversed([s for s in self.prop_shapes]):
-            if shape.containsPoint(point) and shape.keep == 1:
-                shape.selected = True
-                self.selectedShape = shape
-                self.update()
+        for i, prop in enumerate(reversed(self.prop_shapes)):
+            find = False
+            for shape in reversed([s for s in prop]):
+                if shape.containsPoint(point) and shape.keep == 1:
+                    shape.selected = True
+                    self.selectedShape = shape
+                    self.update()
+                    find = True
+                    break
+            if find:
                 break
 
         for shape in reversed([s for s in self.true_shapes]):
@@ -447,7 +462,7 @@ class Canvas(QWidget):
         self.pixmap = None
         self.update()
 
-    def saveXMl(self, img_name=None, dir_path=None):
+    def saveXMl(self, img_name=None, dir_path=None, pIdx=0):
         if dir:
             img_size = (self.pixmap.height(), self.pixmap.width(), 3)
             writer = NewWriter(img_name, img_size)
@@ -464,7 +479,7 @@ class Canvas(QWidget):
                                   shape.name,
                                   mtag)
 
-            for shape in self.prop_shapes:
+            for shape in self.prop_shapes[pIdx]:
                 if shape.mtag:
                     mtag = shape.mtag
                 else:

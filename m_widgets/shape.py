@@ -162,8 +162,8 @@ class TrueShape(Shape, TrueMixin):
                     base.__init__(self, *args, **kwargs)
 
     def __repr__(self):
-        ret = "<shape {}: id:{}, name:{}>".format(
-            self.b_type, id(self), self.name)
+        ret = "<shape {}: id:{}, name:{}, mtag:{}>".format(
+            self.b_type, id(self), self.name, self.mtag)
         return ret
 
 
@@ -177,6 +177,6 @@ class PropShape(Shape, PropMixin):
                     base.__init__(self, *args, **kwargs)
 
     def __repr__(self):
-        ret = "<shape {}: id:{}, name:{}, score:{}, keep:{}>".format(
-            self.b_type, id(self), self.name, self.score, self.keep)
+        ret = "<shape {}: id:{}, name:{}, score:{}, keep:{}, mtag:{}>".format(
+            self.b_type, id(self), self.name, self.score, self.keep, self.mtag)
         return ret
