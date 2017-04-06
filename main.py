@@ -11,6 +11,7 @@ from PyQt4.QtGui import *
 from m_widgets.canvas import Canvas
 from m_widgets.shape import TrueShape
 from m_widgets.labelDialog import LabelDialog
+from m_widgets.viewDialog import viewDialog
 from m_utils.xmlFile import xmlFile
 from m_utils.m_io import NewReader
 from m_utils.utils import get_stat
@@ -142,6 +143,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.labelDialog = LabelDialog(parent=self, listItem=['head', 'person'])
         self.labelDialog.setWindowTitle('label')
 
+        self.viewDialog = viewDialog(parent=self, listItem=['default'])
+        self.labelDialog.setWindowTitle('view class')
+
         self.scroll = QScrollArea()
         self.scroll.setWidget(self.canvas)
         self.scroll.setWidgetResizable(True)
@@ -170,6 +174,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
         fit_action = action('&Fit Window', self.fitWindowSize,
                              None, None, u'Fit window')
+        view_action = action('&view Class', self.viewClass,
+                             None, None, u'view Class')
 
         stat_action = action('&Pic Stat', self.showStat,
                              None, None, u'Pic Stat')
@@ -210,6 +216,7 @@ class MainWindow(QMainWindow, WindowMixin):
             set_anno=set_anno_action,
             set_m_anno=set_m_anno_action,
             fit=fit_action,
+            view=view_action,
             stat=stat_action,
             info=info_action,
             draw=draw_action,
@@ -231,7 +238,8 @@ class MainWindow(QMainWindow, WindowMixin):
                                      set_anno_action,
                                      set_m_anno_action,
                                      None, quit_action))
-        addActions(self.menus.view, (fit_action,))
+        addActions(self.menus.view, (fit_action, None,
+                                     view_action))
         addActions(self.menus.edit, (del_box_action, None,
                                      set_true_action, set_dev_action,
                                      set_error_action, res_box_action))
@@ -362,17 +370,22 @@ class MainWindow(QMainWindow, WindowMixin):
 
         if dir_path is not None and len(dir_path) > 1:
             dir_path = dir_path.replace('\\', '/')
-            self.multiXml = True
-            self.xmlDir = dir_path
             file_dir = QDir(dir_path)
             file_dir.setFilter(QDir.Dirs | QDir.NoDotAndDotDot)
             file_dir.setSorting(QDir.Name)
+
+            if len(file_dir.entryList()) > 8:
+                print('too much annotation class')
+                return
+
+            self.multiXml = True
+            self.xmlDir = dir_path
             self.annoList = [str(x) for x in file_dir.entryList()]
+
             if len(self.annoList) > 0:
-                 self.loadXMLFile()
+                self.loadXMLFile()
             else:
                 print('multi dir does not exist')
-
 
     def getXMLFileName(self, image_name=None, xml_dir=None):
         ret = None
@@ -399,10 +412,13 @@ class MainWindow(QMainWindow, WindowMixin):
                 xml_list = []
                 for f in self.annoList:
                     xml_dir = os.path.join(self.xmlDir, f).replace('\\', '/')
-                    xml_file = self.getXMLFileName(xml_dir=xml_dir)
-                    if xml_file:
-                        xml_list.append(xml_file)
-                print(xml_list)
+                    xml = self.getXMLFileName(xml_dir=xml_dir)
+                    if xml:
+                        xml_list.append(xml)
+                for xml in xml_list:
+                    xml_file = xmlFile(xml)
+                    self.canvas.prop_shapes.append(xml_file.prop_meta_shapes)
+                self.canvas.update()
             else:
                 xml_file = self.getXMLFileName()
                 if xml_file:
@@ -415,6 +431,11 @@ class MainWindow(QMainWindow, WindowMixin):
                 else:
                     self.status(u'can not find xml file', delay=3000)
 
+    def viewClass(self):
+        if self.multiXml:
+            self.viewDialog = viewDialog(parent=self, listItem=self.annoList)
+            self.labelDialog.setWindowTitle('label')
+        self.viewDialog.show()
 
     def showInfo(self):
         print("imgFname: {}".format(self.imgFname))
