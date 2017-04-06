@@ -144,7 +144,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.labelDialog.setWindowTitle('label')
 
         self.viewDialog = viewDialog(parent=self, listItem=['default'])
-        self.labelDialog.setWindowTitle('view class')
+        self.viewDialog.setWindowTitle('view class')
 
         self.scroll = QScrollArea()
         self.scroll.setWidget(self.canvas)
@@ -433,8 +433,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def viewClass(self):
         if self.multiXml:
-            self.viewDialog = viewDialog(parent=self, listItem=self.annoList)
-            self.labelDialog.setWindowTitle('label')
+            self.viewDialog =viewDialog(parent=self, listItem=self.annoList)
+            self.viewDialog.setWindowTitle('view class')
         self.viewDialog.show()
 
     def showInfo(self):

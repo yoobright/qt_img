@@ -287,6 +287,10 @@ class Canvas(QWidget):
                     if shape.containsPoint(pos) and \
                                     shape['keep'] == 1:
                         self.hpShape = shape
+                        self.setToolTip(
+                            "name: {}\nscore: {}".format(
+                                shape.name, shape.score)
+                            )
                         self.update()
                         find = True
                         break

@@ -16,6 +16,14 @@ class viewDialog(QDialog):
         layout = QVBoxLayout()
         self.listWidget = QListWidget(self)
         if listItem is not None and len(listItem) > 0:
+            color_icon = QPixmap(26, 26)
+            color_icon.fill(QColor(COLOR_STYLE[0]))
+            item = QListWidgetItem(QIcon(color_icon), 'true')
+            self.listWidget.addItem(item)
+            separator = QListWidgetItem('--------------')
+            separator.setSizeHint(QSize(8, 8))
+            separator.setFlags(Qt.NoItemFlags)
+            self.listWidget.addItem(separator)
             for i, item in enumerate(listItem):
                 color_icon = QPixmap(26, 26)
                 color_icon.fill(QColor(COLOR_STYLE[i + 1]))
@@ -25,3 +33,9 @@ class viewDialog(QDialog):
         self.buttonBox = BB(BB.Ok | BB.Cancel, Qt.Horizontal, self)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
+
+        self.buttonBox.accepted.connect(self.validate)
+        self.buttonBox.rejected.connect(self.reject)
+
+    def validate(self):
+        self.accept()
