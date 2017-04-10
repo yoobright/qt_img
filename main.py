@@ -14,6 +14,7 @@ from m_widgets.labelDialog import LabelDialog
 from m_widgets.viewDialog import viewDialog
 from m_utils.xmlFile import xmlFile
 from m_utils.m_io import NewReader
+from m_utils.conf import getLabelList
 from m_utils.utils import get_stat
 
 try:
@@ -126,6 +127,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.multiXml = False
         self.xmlDir = None
         self.annoList = None
+        self.labelList = getLabelList('conf/conf.xml')
         self.xmlFname = None
 
         QWidget.__init__(self, parent)
@@ -140,7 +142,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.newShape.connect(self.newShape)
         self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
 
-        self.labelDialog = LabelDialog(parent=self, listItem=['head', 'person'])
+        self.labelDialog = LabelDialog(parent=self,
+                                       listItem=self.labelList)
         self.labelDialog.setWindowTitle('label')
 
         self.viewDialog = viewDialog(parent=self, listItem=['default'])
@@ -447,10 +450,7 @@ class MainWindow(QMainWindow, WindowMixin):
         print("true_meta_shapes: {}".format(self.canvas.true_shapes))
         print("prop_meta_shapes: {}".format(self.canvas.prop_shapes))
         print("selectedShape: {}".format(self.canvas.selectedShape))
-        # for meta_shape in reversed([s for s in self.canvas.prop_meta_shapes]):
-        #     if meta_shape['keep'] == 1:
-        #         print()
-        #         print(meta_shape['shape'].points)
+
 
     def showStat(self):
         xml_file = self.getXMLFileName()
