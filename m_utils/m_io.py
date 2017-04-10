@@ -237,17 +237,17 @@ class NewReader:
                       'can not parse xml file: {}'.format(self.filepath))
             else:
                 raise ex
+        else:
+            for object_iter in xmltree.findall('object'):
+                bndbox = object_iter.find("bndbox")
+                label = object_iter.find('name').text
+                self.addTrueBox(label, bndbox)
 
-        for object_iter in xmltree.findall('object'):
-            bndbox = object_iter.find("bndbox")
-            label = object_iter.find('name').text
-            self.addTrueBox(label, bndbox)
+            for proposal_iter in xmltree.findall('proposal'):
+                bndbox = proposal_iter.find("bndbox")
+                label = proposal_iter.find('name').text
+                score = proposal_iter.find('score').text
+                keep = proposal_iter.find('keep').text
+                self.addPropBox(label, bndbox, score, keep)
 
-        for proposal_iter in xmltree.findall('proposal'):
-            bndbox = proposal_iter.find("bndbox")
-            label = proposal_iter.find('name').text
-            score = proposal_iter.find('score').text
-            keep = proposal_iter.find('keep').text
-            self.addPropBox(label, bndbox, score, keep)
-
-        return True
+            return True

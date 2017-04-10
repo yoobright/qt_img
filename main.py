@@ -126,6 +126,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.imageIdx = None
         self.multiXml = False
         self.xmlDir = None
+        self.saveDir = None
         self.annoList = None
         self.labelList = getLabelList('conf/conf.xml')
         self.xmlFname = None
@@ -171,9 +172,10 @@ class MainWindow(QMainWindow, WindowMixin):
                              None, None, u'Quit application')
         set_anno_action = action('Set XML Dir', self.setXMLDir,
                              None, None, u'Set XML Dir')
-
         set_m_anno_action = action('Set Multi XML Dir', self.setMultiXMLDir,
                              None, None, u'Set Multi XML Dir')
+        set_s_dir_action = action('Set XML Save Dir', self.setXMLSaveDir,
+                             None, None, u'Set XML Save Dir')
 
         fit_action = action('&Fit Window', self.fitWindowSize,
                              None, None, u'Fit window')
@@ -218,6 +220,7 @@ class MainWindow(QMainWindow, WindowMixin):
             quit=quit_action,
             set_anno=set_anno_action,
             set_m_anno=set_m_anno_action,
+            set_s_dir=set_s_dir_action,
             fit=fit_action,
             view=view_action,
             stat=stat_action,
@@ -240,6 +243,8 @@ class MainWindow(QMainWindow, WindowMixin):
         addActions(self.menus.file, (open_action,
                                      set_anno_action,
                                      set_m_anno_action,
+                                     None,
+                                     set_s_dir_action,
                                      None, quit_action))
         addActions(self.menus.view, (fit_action, None,
                                      view_action))
@@ -390,6 +395,16 @@ class MainWindow(QMainWindow, WindowMixin):
             else:
                 print('multi dir does not exist')
 
+    def setXMLSaveDir(self):
+        curr_path = os.path.dirname(self.imgFname) \
+                if self.imgFname else '.'
+        dir_path = str(QFileDialog.getExistingDirectory(self,
+            '%s - Open Directory' % __appname__,  curr_path,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
+
+        if dir_path:
+            self.saveDir = dir_path.replace('\\', '/')
+
     def getXMLFileName(self, image_name=None, xml_dir=None):
         ret = None
         if image_name is None and self.imgFname:
@@ -517,18 +532,28 @@ class MainWindow(QMainWindow, WindowMixin):
         # self.imageIdx = prevIdx
 
     def saveLabel(self):
+        dir_path = None
         if self.imgFname:
-            curr_path = os.path.dirname(self.imgFname) \
-                if self.imgFname else '.'
-            dir_path = str(QFileDialog.getExistingDirectory(self,
-            '%s - Open Directory' % __appname__,  curr_path,
-            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
+            if self.saveDir:
+                message = QMessageBox()
+                message.setIcon(QMessageBox.Information)
+                message.setWindowTitle("save xml...")
+                message.setText("Save XMl to '{}'?".format(self.saveDir))
+                message.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+                message.setDefaultButton(QMessageBox.Yes)
+                if message.exec_() == QMessageBox.Yes:
+                    dir_path = self.saveDir
+            else:
+                curr_path = os.path.dirname(self.imgFname) \
+                    if self.imgFname else '.'
+                dir_path = str(QFileDialog.getExistingDirectory(self,
+                    '%s - Open Directory' % __appname__,  curr_path,
+                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
 
-            if dir_path is not None and len(dir_path) > 1:
-                dir_path = dir_path.replace('\\', '/')
-                img_name = os.path.basename(self.imgFname)
-                self.canvas.saveXMl(img_name, dir_path)
-
+        if dir_path is not None and len(dir_path) > 1:
+            dir_path = dir_path.replace('\\', '/')
+            img_name = os.path.basename(self.imgFname)
+            self.canvas.saveXMl(img_name, dir_path)
 
     def zoomRequest(self, delta, pos):
         units = delta / (8 * 15)
