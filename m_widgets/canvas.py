@@ -125,22 +125,23 @@ class Canvas(QWidget):
                 yield d, i, (x, y)
 
     def paintEvent(self, ev):
-        p = self._painter
-        p.begin(self)
-        p.setRenderHint(QPainter.Antialiasing)
-        p.setRenderHint(QPainter.HighQualityAntialiasing)
-        p.setRenderHint(QPainter.SmoothPixmapTransform)
+        if self.isEnabled():
+            p = self._painter
+            p.begin(self)
+            p.setRenderHint(QPainter.Antialiasing)
+            p.setRenderHint(QPainter.HighQualityAntialiasing)
+            p.setRenderHint(QPainter.SmoothPixmapTransform)
 
-        p.scale(self.scale, self.scale)
-        p.translate(self.offsetToCenter())
-        # print(self.pixmap)
-        p.drawPixmap(0, 0, self.pixmap)
-        Shape.scale = self.scale
-        self.paintPropShape(p)
-        self.paintTrueShape(p)
-        if self.current_shape:
-            self.paintRect(p)
-        p.end()
+            p.scale(self.scale, self.scale)
+            p.translate(self.offsetToCenter())
+            # print(self.pixmap)
+            p.drawPixmap(0, 0, self.pixmap)
+            Shape.scale = self.scale
+            self.paintPropShape(p)
+            self.paintTrueShape(p)
+            if self.current_shape:
+                self.paintRect(p)
+            p.end()
 
     def paintTrueShape(self, painter):
         for shape in self.true_shapes:
@@ -468,7 +469,7 @@ class Canvas(QWidget):
 
     def saveXMl(self, img_name=None, dir_path=None, pIdx=0):
         if dir:
-            img_size = (self.pixmap.height(), self.pixmap.width(), 3)
+            img_size = (self.pixmap.width(), self.pixmap.height(), 3)
             writer = NewWriter(img_name, img_size)
 
             for shape in self.true_shapes:

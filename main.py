@@ -287,7 +287,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
             if filename in self.imageList:
                 self.imageIdx = self.imageList.index(u(filename))
-            self.loadFile(filename)
+            if not self.loadFile(filename):
+                self.resetState()
 
     def errorMessage(self, title, message):
         return QMessageBox.critical(self, title, '<p><b>%s</b></p>%s' %
@@ -312,22 +313,23 @@ class MainWindow(QMainWindow, WindowMixin):
         self.imgFname = None
         self.imageData = None
         self.canvas.resetState()
+        self.canvas.setEnabled(False)
 
     def loadFile(self, filename=None):
         self.resetState()
-        self.canvas.setEnabled(False)
         if filename and QFile.exists(filename):
-            self.imageData = read(filename, None)
-            image = QImage.fromData(self.imageData)
-            if image.isNull():
+            self.imageData = QImage()
+            self.imageData.load(filename)
+            if self.imageData.isNull():
                 self.errorMessage(
                     u'Error opening file',
                     u"<p>Make sure <i>%s</i> is a valid image file." %
                     filename)
                 self.status("Error reading %s" % filename)
                 return False
-            self.canvas.loadPixmap(QPixmap.fromImage(image))
             self.canvas.setEnabled(True)
+            pixmap = QPixmap().fromImage(self.imageData)
+            self.canvas.loadPixmap(pixmap)
             self.canvas.scale = self.scaleFitWindow()
             self.canvas.adjustSize()
             self.canvas.update()
@@ -494,7 +496,6 @@ class MainWindow(QMainWindow, WindowMixin):
 
             print(all_stat)
 
-
     def openNextImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
             return
@@ -509,9 +510,10 @@ class MainWindow(QMainWindow, WindowMixin):
 
         filename = self.imageList[nextIdx]
         self.imageIdx = nextIdx
-        self.loadFile(filename)
-        self.loadXMLFile()
-        # self.imageIdx = nextIdx
+        if self.loadFile(filename):
+            self.loadXMLFile()
+        else:
+            self.resetState()
 
     def openPrevImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
@@ -527,9 +529,10 @@ class MainWindow(QMainWindow, WindowMixin):
 
         filename = self.imageList[prevIdx]
         self.imageIdx = prevIdx
-        self.loadFile(filename)
-        self.loadXMLFile()
-        # self.imageIdx = prevIdx
+        if self.loadFile(filename):
+            self.loadXMLFile()
+        else:
+            self.resetState()
 
     def saveLabel(self):
         dir_path = None

@@ -81,8 +81,8 @@ class NewWriter:
         width = SubElement(size_part, 'width')
         height = SubElement(size_part, 'height')
         depth = SubElement(size_part, 'depth')
-        width.text = str(self.imgSize[1])
-        height.text = str(self.imgSize[0])
+        width.text = str(self.imgSize[0])
+        height.text = str(self.imgSize[1])
         if len(self.imgSize) == 3:
             depth.text = str(self.imgSize[2])
         else:
