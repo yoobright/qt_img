@@ -63,7 +63,8 @@ class Shape(object):
             painter.drawPath(line_path)
 
             if self.fill:
-                color = self.select_fill_color if self.selected else self.fill_color
+                color = self.select_fill_color if self.selected else \
+                    self.fill_color
                 painter.fillPath(line_path, color)
 
     def containsPoint(self, point):
@@ -129,15 +130,6 @@ class Shape(object):
 
     def addPoint(self, point):
             self.points.append(point)
-
-    # def __len__(self):
-    #     return len(self.points)
-    #
-    # def __getitem__(self, key):
-    #     return self.points[key]
-    #
-    # def __setitem__(self, key, value):
-    #     self.points[key] = value
 
 
 class TrueMixin():

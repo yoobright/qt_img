@@ -15,7 +15,7 @@ from m_widgets.viewDialog import viewDialog
 from m_utils.xmlFile import xmlFile
 from m_utils.m_io import NewReader
 from m_utils.conf import getLabelList
-from m_utils.utils import get_stat
+from m_utils.utils import get_stat, sort_nicely
 
 try:
     _fromUtf8 = QString.fromUtf8
@@ -269,6 +269,7 @@ class MainWindow(QMainWindow, WindowMixin):
                   for image in file_dir.entryList()]
         # for windows dir
         images = [x.replace('\\', '/') for x in images]
+        images = sort_nicely(images)
         return images
 
     def openFile(self):
@@ -299,7 +300,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.statusBar().showMessage(message, delay)
 
     def scaleFitWindow(self):
-        e = 2.0 # So that no scrollbars are generated.
+        e = 2.0  # So that no scrollbars are generated.
         w1 = self.centralWidget().width() - e
         h1 = self.centralWidget().height() - e
         a1 = w1/ h1
