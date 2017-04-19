@@ -54,6 +54,7 @@ class Canvas(QWidget):
         self.hpShape = None
         self.htShape = None
         self.selectedShape = None
+        self.showFilter = None
         self.menus = QMenu()
         self.resize_tag = None
         # Set widget options
@@ -144,6 +145,8 @@ class Canvas(QWidget):
             p.end()
 
     def paintTrueShape(self, painter):
+        if self.showFilter and not self.showFilter[0]:
+            return
         for shape in self.true_shapes:
             if shape == self.htShape or shape.selected:
                 shape.fill = True
@@ -152,26 +155,32 @@ class Canvas(QWidget):
             shape.paint(painter)
 
     def paintPropShape(self, painter):
+        if self.showFilter:
+            show_tag = self.showFilter[1:]
+        else:
+            show_tag = [True] * len(self.prop_shapes)
         for i, prop in enumerate(self.prop_shapes):
             if i > 7:
                 print('out of max prop list len')
                 break
-            for shape in prop:
-                if shape['mtag']:
-                    pen = getRectStyle(PROP_D_STYLE)
-                else:
-                    pen = getRectStyle(i + 1, shape['keep'])
-
-                if (shape == self.hpShape or shape.selected) and \
-                   shape['keep'] == 1:
-                    shape.fill = True
-                else:
-                    shape.fill = False
-                if self.keep_only:
-                    if shape['keep'] == 1:
+            if show_tag[i]:
+                for shape in prop:
+                    # get pen style
+                    if shape['mtag']:
+                        pen = getRectStyle(PROP_D_STYLE)
+                    else:
+                        pen = getRectStyle(i + 1, shape['keep'])
+                    # set highlight
+                    if (shape == self.hpShape or shape.selected) and \
+                       shape['keep'] == 1:
+                        shape.fill = True
+                    else:
+                        shape.fill = False
+                    if self.keep_only:
+                        if shape['keep'] == 1:
+                            shape.paint(painter, pen=pen)
+                    else:
                         shape.paint(painter, pen=pen)
-                else:
-                    shape.paint(painter, pen=pen)
 
     def paintRect(self, painter):
         leftTop = self.rect_points[0]

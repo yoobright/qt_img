@@ -405,6 +405,8 @@ class MainWindow(QMainWindow, WindowMixin):
             self.annoList = [str(x) for x in file_dir.entryList()]
 
             if len(self.annoList) > 0:
+                self.viewDialog.setlistItem(self.annoList)
+                self.canvas.showFilter = None
                 self.loadXMLFile()
             else:
                 print('multi dir does not exist')
@@ -447,6 +449,8 @@ class MainWindow(QMainWindow, WindowMixin):
                     xml = self.getXMLFileName(xml_dir=xml_dir)
                     if xml:
                         xml_list.append(xml)
+                self.canvas.true_shapes = []
+                self.canvas.prop_shapes = []
                 for xml in xml_list:
                     xml_file = xmlFile(xml)
                     self.canvas.prop_shapes.append(xml_file.prop_meta_shapes)
@@ -458,17 +462,17 @@ class MainWindow(QMainWindow, WindowMixin):
                     self.xmlFname = xml_file
                     xml_file = xmlFile(self.xmlFname)
                     self.canvas.true_shapes = xml_file.true_meta_shapes
+                    self.canvas.prop_shapes = []
                     self.canvas.prop_shapes.append(xml_file.prop_meta_shapes)
                     self.canvas.update()
                 else:
                     self.status(u'can not find xml file', delay=3000)
 
-
     def viewClass(self):
-        if self.multiXml:
-            self.viewDialog =viewDialog(parent=self, listItem=self.annoList)
-            self.viewDialog.setWindowTitle('view class')
-        self.viewDialog.show()
+        view_state = self.viewDialog.popUp()
+        if view_state:
+            self.canvas.showFilter = view_state
+            self.canvas.update()
 
     def showInfo(self):
         print("imgFname: {}".format(self.imgFname))

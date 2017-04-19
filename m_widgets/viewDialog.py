@@ -16,20 +16,7 @@ class viewDialog(QDialog):
         super(viewDialog, self).__init__(parent)
         layout = QVBoxLayout()
         self.listWidget = QListWidget(self)
-        if listItem is not None and len(listItem) > 0:
-            color_icon = QPixmap(26, 26)
-            color_icon.fill(QColor(COLOR_STYLE[0]))
-            item = QListWidgetItem(QIcon(color_icon), 'true')
-            self.listWidget.addItem(item)
-            separator = QListWidgetItem('--------------')
-            separator.setSizeHint(QSize(8, 8))
-            separator.setFlags(Qt.NoItemFlags)
-            self.listWidget.addItem(separator)
-            for i, item in enumerate(listItem):
-                color_icon = QPixmap(26, 26)
-                color_icon.fill(QColor(COLOR_STYLE[i + 1]))
-                item = QListWidgetItem(QIcon(color_icon), item)
-                self.listWidget.addItem(item)
+        self.setlistItem(listItem)
         layout.addWidget(self.listWidget)
         self.buttonBox = BB(BB.Ok | BB.Cancel, Qt.Horizontal, self)
         layout.addWidget(self.buttonBox)
@@ -40,3 +27,37 @@ class viewDialog(QDialog):
 
     def validate(self):
         self.accept()
+
+    def setlistItem(self, listItem):
+        self.listWidget.clear()
+        if listItem is not None and len(listItem) > 0:
+            self.listWidget.addItem(self.newItem('true', COLOR_STYLE[0]))
+            self.listWidget.addItem(self.newSeparator())
+            for i, item in enumerate(listItem):
+                self.listWidget.addItem(self.newItem(item, COLOR_STYLE[i + 1]))
+
+    def newSeparator(self):
+        separator = QListWidgetItem('--------------')
+        separator.setSizeHint(QSize(8, 8))
+        separator.setFlags(Qt.NoItemFlags)
+        return separator
+
+    def newItem(self, name, color):
+        color_icon = QPixmap(26, 26)
+        color_icon.fill(QColor(color))
+        item = QListWidgetItem(QIcon(color_icon), name)
+        item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+        item.setCheckState(Qt.Checked)
+        item.checkState()
+        return item
+
+    def popUp(self):
+        if self.exec_():
+            item_state = []
+            for i in range(self.listWidget.count()):
+                item = self.listWidget.item(i)
+                if item.flags():
+                    item_state.append(bool(item.checkState()))
+            return item_state
+        else:
+            return None
