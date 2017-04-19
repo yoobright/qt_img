@@ -10,8 +10,9 @@ from m_utils.style import COLOR_STYLE
 
 BB = QDialogButtonBox
 
+
 class viewDialog(QDialog):
-    def __init__(self, text="prop class", parent=None, listItem=None):
+    def __init__(self, parent=None, listItem=None):
         super(viewDialog, self).__init__(parent)
         layout = QVBoxLayout()
         self.listWidget = QListWidget(self)

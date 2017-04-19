@@ -12,6 +12,7 @@ from m_widgets.canvas import Canvas
 from m_widgets.shape import TrueShape
 from m_widgets.labelDialog import LabelDialog
 from m_widgets.viewDialog import viewDialog
+from m_widgets.jumpDialog import jumpDialog
 from m_utils.xmlFile import xmlFile
 from m_utils.m_io import NewReader
 from m_utils.conf import getLabelList
@@ -143,12 +144,16 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.newShape.connect(self.newShape)
         self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
 
+        # init
         self.labelDialog = LabelDialog(parent=self,
                                        listItem=self.labelList)
         self.labelDialog.setWindowTitle('label')
 
         self.viewDialog = viewDialog(parent=self, listItem=['default'])
         self.viewDialog.setWindowTitle('view class')
+
+        self.jumpDialog = jumpDialog(parent=self, img_len=0)
+        self.jumpDialog.setWindowTitle('jump to ...')
 
         self.scroll = QScrollArea()
         self.scroll.setWidget(self.canvas)
@@ -179,7 +184,9 @@ class MainWindow(QMainWindow, WindowMixin):
 
         fit_action = action('&Fit Window', self.fitWindowSize,
                              None, None, u'Fit window')
-        view_action = action('&view Class', self.viewClass,
+        jump_action = action('&Jump To...', self.jumpToImg,
+                             None, None, u'&Jump To...')
+        view_action = action('&View Class', self.viewClass,
                              None, None, u'view Class')
 
         stat_action = action('&Pic Stat', self.showStat,
@@ -222,6 +229,7 @@ class MainWindow(QMainWindow, WindowMixin):
             set_m_anno=set_m_anno_action,
             set_s_dir=set_s_dir_action,
             fit=fit_action,
+            jump=jump_action,
             view=view_action,
             stat=stat_action,
             info=info_action,
@@ -246,7 +254,7 @@ class MainWindow(QMainWindow, WindowMixin):
                                      None,
                                      set_s_dir_action,
                                      None, quit_action))
-        addActions(self.menus.view, (fit_action, None,
+        addActions(self.menus.view, (fit_action, jump_action, None,
                                      view_action))
         addActions(self.menus.edit, (del_box_action, None,
                                      set_true_action, set_dev_action,
@@ -336,11 +344,14 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.update()
             self.setEditMode()
             self.imgFname = u(filename)
-
+            num_tag = u""
             if len(self.imageList) > 1:
-                title = u"{} [{}/{}]".format(__appname__, self.imageIdx + 1,
-                                             len(self.imageList))
-                self.setWindowTitle(title)
+                num_tag = u"[{}/{}]".format(self.imageIdx + 1,
+                                               len(self.imageList))
+            title = u"{} {} {}".format(__appname__,
+                                       self.imageList[self.imageIdx],
+                                       num_tag)
+            self.setWindowTitle(title)
             return True
         return False
 
@@ -452,6 +463,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 else:
                     self.status(u'can not find xml file', delay=3000)
 
+
     def viewClass(self):
         if self.multiXml:
             self.viewDialog =viewDialog(parent=self, listItem=self.annoList)
@@ -497,43 +509,36 @@ class MainWindow(QMainWindow, WindowMixin):
 
             print(all_stat)
 
-    def openNextImg(self):
-        if (self.imageList is None) or (len(self.imageList) <= 0):
-            return
-
-        filename = None
-        if self.imageIdx + 1 < len(self.imageList):
-            nextIdx = self.imageIdx + 1
-        elif self.imageIdx + 1 == len(self.imageList):
-            nextIdx = 0
-        else:
-            return
-
-        filename = self.imageList[nextIdx]
-        self.imageIdx = nextIdx
+    def loadImgFromIdx(self, idx):
+        filename = self.imageList[idx]
+        self.imageIdx = idx
         if self.loadFile(filename):
             self.loadXMLFile()
         else:
             self.resetState()
+
+
+    def openNextImg(self):
+        if (self.imageList is None) or (len(self.imageList) <= 0):
+            return
+
+        nextIdx = (self.imageIdx + 1) % len(self.imageList)
+        self.loadImgFromIdx(nextIdx)
+
 
     def openPrevImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
             return
 
-        filename = None
-        if self.imageIdx - 1 >= 0:
-            prevIdx = self.imageIdx - 1
-        elif self.imageIdx - 1 == -1:
-            prevIdx = len(self.imageList) - 1
-        else:
-            return
+        prevIdx = (self.imageIdx - 1) % len(self.imageList)
+        self.loadImgFromIdx(prevIdx)
 
-        filename = self.imageList[prevIdx]
-        self.imageIdx = prevIdx
-        if self.loadFile(filename):
-            self.loadXMLFile()
-        else:
-            self.resetState()
+    def jumpToImg(self):
+        if self.imageList and len(self.imageList) > 1:
+            num = self.jumpDialog.popUp(img_len=len(self.imageList))
+            if num:
+                idx = int(num) - 1
+                self.loadImgFromIdx(idx)
 
     def saveLabel(self):
         dir_path = None
