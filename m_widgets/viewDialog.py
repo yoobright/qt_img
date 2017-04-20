@@ -39,14 +39,14 @@ class viewDialog(QDialog):
     def newSeparator(self):
         separator = QListWidgetItem('--------------')
         separator.setSizeHint(QSize(8, 8))
-        separator.setFlags(Qt.NoItemFlags)
+        separator.setFlags(separator.flags() & Qt.NoItemFlags)
         return separator
 
     def newItem(self, name, color):
         color_icon = QPixmap(26, 26)
         color_icon.fill(QColor(color))
         item = QListWidgetItem(QIcon(color_icon), name)
-        item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+        item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
         item.setCheckState(Qt.Checked)
         item.checkState()
         return item
