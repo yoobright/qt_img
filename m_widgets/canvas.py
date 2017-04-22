@@ -74,7 +74,7 @@ class Canvas(QWidget):
         return QPointF(x, y)
 
     def outOfPixmap(self, p):
-        w, h = self.pixmap.width() - 1, self.pixmap.height() - 1
+        w, h = self.pixmap.width(), self.pixmap.height()
         return not (0 <= p.x() <= w and 0 <= p.y() <= h)
 
     def intersectionPoint(self, p1, p2):
@@ -492,20 +492,20 @@ class Canvas(QWidget):
                                   shape.ymax,
                                   shape.name,
                                   mtag)
-
-            for shape in self.prop_shapes[pIdx]:
-                if shape.mtag:
-                    mtag = shape.mtag
-                else:
-                    mtag =None
-                writer.addPropBox(shape.xmin,
-                                  shape.ymin,
-                                  shape.xmax,
-                                  shape.ymax,
-                                  shape.name,
-                                  shape.score,
-                                  shape.keep,
-                                  mtag)
+            if len(self.prop_shapes) > 0:
+                for shape in self.prop_shapes[pIdx]:
+                    if shape.mtag:
+                        mtag = shape.mtag
+                    else:
+                        mtag =None
+                    writer.addPropBox(shape.xmin,
+                                      shape.ymin,
+                                      shape.xmax,
+                                      shape.ymax,
+                                      shape.name,
+                                      shape.score,
+                                      shape.keep,
+                                      mtag)
             print(writer.save(dir_path))
 
 
