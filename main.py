@@ -119,7 +119,7 @@ class WindowMixin(object):
 
 
 class MainWindow(QMainWindow, WindowMixin):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, debug=False):
         self.imgFname = None
         self.imageData = None
         self.imageDir = None
@@ -131,6 +131,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.annoList = None
         self.labelList = getLabelList('conf/conf.xml')
         self.xmlFname = None
+        self.debug = debug
 
         QWidget.__init__(self, parent)
         self.setWindowTitle(__appname__)
@@ -243,7 +244,9 @@ class MainWindow(QMainWindow, WindowMixin):
             res_box=res_box_action,
         )
         # set tools
-        tool = [prev_action, next_action, draw_action, save_action, test_action]
+        tool = [prev_action, next_action, draw_action, save_action]
+        if self.debug:
+            tool.append(test_action)
         addActions(self.tools, tool)
         # set menus action
         self.menus = struct(file=self.menu('&File'), view=self.menu('&View'),
@@ -691,6 +694,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    myapp = MainWindow()
+    debug = 'debug' in sys.argv
+    myapp = MainWindow(debug=debug)
     myapp.show()
     sys.exit(app.exec_())

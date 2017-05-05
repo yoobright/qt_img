@@ -75,7 +75,7 @@ class Canvas(QWidget):
 
     def outOfPixmap(self, p):
         w, h = self.pixmap.width(), self.pixmap.height()
-        return not (0 <= p.x() <= w and 0 <= p.y() <= h)
+        return not (0 <= p.x() < w and 0 <= p.y() < h)
 
     def intersectionPoint(self, p1, p2):
         # Cycle through each image edge in clockwise fashion,
@@ -261,35 +261,41 @@ class Canvas(QWidget):
                 if self.resize_tag == RESIZE_TOP_LEFT:
                     if pos.x() < self.selectedShape.xmax - 5 and \
                        pos.y() < self.selectedShape.ymax - 5:
-                        self.selectedShape.xmin = int(pos.x())
-                        self.selectedShape.ymin = int(pos.y())
+                        self.selectedShape.xmin = max(int(pos.x()), 1)
+                        self.selectedShape.ymin = max(int(pos.y()), 1)
                 elif self.resize_tag == RESIZE_TOP_RIGHT:
                     if pos.x() > self.selectedShape.xmin + 5 and \
                        pos.y() < self.selectedShape.ymax - 5:
-                        self.selectedShape.xmax = int(pos.x())
-                        self.selectedShape.ymin = int(pos.y())
+                        self.selectedShape.xmax = min(int(pos.x()),
+                                                      self.pixmap.width())
+                        self.selectedShape.ymin = max(int(pos.y()), 1)
                 elif self.resize_tag == RESIZE_BOTTOM_LEFT:
                     if pos.x() < self.selectedShape.xmax - 5 and \
                        pos.y() > self.selectedShape.ymin + 5:
-                        self.selectedShape.xmin = int(pos.x())
-                        self.selectedShape.ymax = int(pos.y())
+                        self.selectedShape.xmin = max(int(pos.x()), 1)
+                        self.selectedShape.ymax = min(int(pos.y()),
+                                                      self.pixmap.height())
                 elif self.resize_tag == RESIZE_BOTTOM_RIGHT:
                     if pos.x() > self.selectedShape.xmin + 5 and \
                        pos.y() > self.selectedShape.ymin + 5:
-                        self.selectedShape.xmax = int(pos.x())
-                        self.selectedShape.ymax = int(pos.y())
+                        self.selectedShape.xmax = min(int(pos.x()),
+                                                      self.pixmap.width())
+                        self.selectedShape.ymax = min(int(pos.y()),
+                                                      self.pixmap.height())
                 elif self.resize_tag == RESIZE_TOP:
                     if pos.y() < self.selectedShape.ymax - 5:
-                        self.selectedShape.ymin = int(pos.y())
+                        self.selectedShape.ymin = max(int(pos.y()), 1)
                 elif self.resize_tag == RESIZE_BOTTOM:
                     if pos.y() > self.selectedShape.ymin + 5:
-                        self.selectedShape.ymax = int(pos.y())
+                        self.selectedShape.ymax = min(int(pos.y()),
+                                                      self.pixmap.height())
                 elif self.resize_tag == RESIZE_LEFT:
                     if pos.x() < self.selectedShape.xmax - 5:
-                        self.selectedShape.xmin = int(pos.x())
+                        self.selectedShape.xmin = max(int(pos.x()), 1)
                 elif self.resize_tag == RESIZE_RIGHT:
                     if pos.x() > self.selectedShape.xmin + 5:
-                        self.selectedShape.xmax = int(pos.x())
+                        self.selectedShape.xmax = min(int(pos.x()),
+                                                      self.pixmap.width())
 
             for i, prop in enumerate(reversed(self.prop_shapes)):
                 find = False
