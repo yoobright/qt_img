@@ -31,6 +31,22 @@ class Shape(object):
     def __setitem__(self, key, item):
         self.__dict__[key] = item
 
+    def __cmp__(self, other):
+        if self.area < other.area:
+            return -1
+        elif self.area > other.area:
+            return 1
+        else:
+            return 0
+
+    @property
+    def area(self):
+        if (self.xmin is not None) and (self.ymin is not None) and \
+                (self.xmax is not None) and (self.ymax is not None):
+            return (self.xmax - self.xmin) * (self.ymax - self.ymin)
+        else:
+            return 0
+
     @property
     def points(self):
         if (self.xmin is not None) and (self.ymin is not None) and \

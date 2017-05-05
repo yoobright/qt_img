@@ -148,7 +148,7 @@ class Canvas(QWidget):
         if self.showFilter and not self.showFilter[0]:
             return
         for shape in self.true_shapes:
-            if shape == self.htShape or shape.selected:
+            if shape is self.htShape or shape.selected:
                 shape.fill = True
             else:
                 shape.fill = False
@@ -171,7 +171,7 @@ class Canvas(QWidget):
                     else:
                         pen = getRectStyle(i + 1, shape['keep'])
                     # set highlight
-                    if (shape == self.hpShape or shape.selected) and \
+                    if (shape is self.hpShape or shape.selected) and \
                        shape['keep'] == 1:
                         shape.fill = True
                     else:
@@ -318,15 +318,8 @@ class Canvas(QWidget):
                 if find:
                     break
 
-            for shape in reversed([s for s in self.true_shapes]):
-                if shape.containsPoint(pos):
-                    self.htShape = shape
-                    self.hpShape = None
-                    self.update()
-                    break
-            else:
-                self.update()
-                self.htShape = None
+            self._setHtShape(pos)
+
 
             if self.selectedShape and self.selectedShape.b_type == 'true':
                 resize_tag = None
@@ -360,6 +353,20 @@ class Canvas(QWidget):
                 if Qt.LeftButton & ev.buttons():
                     if resize_tag is not None:
                         self.resize_tag = resize_tag
+
+    def _setHtShape(self, pos):
+        find_list = []
+        for shape in reversed([s for s in self.true_shapes]):
+            if shape.containsPoint(pos):
+                find_list.append(shape)
+
+        if len(find_list) > 0:
+            self.htShape = sorted(find_list)[0]
+            self.hpShape = None
+        else:
+            self.htShape = None
+        self.update()
+
 
     def mousePressEvent(self, ev):
         pos = self.transformPos(ev.pos())
