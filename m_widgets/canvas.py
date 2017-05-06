@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division
 from math import sqrt, floor
+from itertools import compress
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from shape import Shape, TrueShape
@@ -154,11 +155,14 @@ class Canvas(QWidget):
                 shape.fill = False
             shape.paint(painter)
 
-    def paintPropShape(self, painter):
+    def _prop_show_tag(self):
         if self.showFilter:
-            show_tag = self.showFilter[1:]
+            return self.showFilter[1:]
         else:
-            show_tag = [True] * len(self.prop_shapes)
+            return [True] * len(self.prop_shapes)
+
+    def paintPropShape(self, painter):
+        show_tag = self._prop_show_tag()
         for i, prop in enumerate(self.prop_shapes):
             if i > 7:
                 print('out of max prop list len')
@@ -267,59 +271,38 @@ class Canvas(QWidget):
                     if pos.x() > self.selectedShape.xmin + 5 and \
                        pos.y() < self.selectedShape.ymax - 5:
                         self.selectedShape.xmax = min(int(pos.x()),
-                                                      self.pixmap.width())
+                                                      self.pixmap.width() - 1)
                         self.selectedShape.ymin = max(int(pos.y()), 1)
                 elif self.resize_tag == RESIZE_BOTTOM_LEFT:
                     if pos.x() < self.selectedShape.xmax - 5 and \
                        pos.y() > self.selectedShape.ymin + 5:
                         self.selectedShape.xmin = max(int(pos.x()), 1)
                         self.selectedShape.ymax = min(int(pos.y()),
-                                                      self.pixmap.height())
+                                                      self.pixmap.height() - 1)
                 elif self.resize_tag == RESIZE_BOTTOM_RIGHT:
                     if pos.x() > self.selectedShape.xmin + 5 and \
                        pos.y() > self.selectedShape.ymin + 5:
                         self.selectedShape.xmax = min(int(pos.x()),
-                                                      self.pixmap.width())
+                                                      self.pixmap.width() - 1)
                         self.selectedShape.ymax = min(int(pos.y()),
-                                                      self.pixmap.height())
+                                                      self.pixmap.height() - 1)
                 elif self.resize_tag == RESIZE_TOP:
                     if pos.y() < self.selectedShape.ymax - 5:
                         self.selectedShape.ymin = max(int(pos.y()), 1)
                 elif self.resize_tag == RESIZE_BOTTOM:
                     if pos.y() > self.selectedShape.ymin + 5:
                         self.selectedShape.ymax = min(int(pos.y()),
-                                                      self.pixmap.height())
+                                                      self.pixmap.height() - 1)
                 elif self.resize_tag == RESIZE_LEFT:
                     if pos.x() < self.selectedShape.xmax - 5:
                         self.selectedShape.xmin = max(int(pos.x()), 1)
                 elif self.resize_tag == RESIZE_RIGHT:
                     if pos.x() > self.selectedShape.xmin + 5:
                         self.selectedShape.xmax = min(int(pos.x()),
-                                                      self.pixmap.width())
+                                                      self.pixmap.width() - 1)
 
-            for i, prop in enumerate(reversed(self.prop_shapes)):
-                find = False
-                for shape in reversed([s for s in prop]):
-                    if shape.containsPoint(pos) and \
-                                    shape['keep'] == 1:
-                        self.hpShape = shape
-                        self.setToolTip(
-                            "name: {}\nscore: {}".format(
-                                shape.name, shape.score)
-                            )
-                        self.update()
-                        find = True
-                        break
-                else:
-                    if self.hpShape:
-                        self.update()
-                    self.hpShape = None
-
-                if find:
-                    break
-
+            self._setHpShape(pos)
             self._setHtShape(pos)
-
 
             if self.selectedShape and self.selectedShape.b_type == 'true':
                 resize_tag = None
@@ -354,7 +337,28 @@ class Canvas(QWidget):
                     if resize_tag is not None:
                         self.resize_tag = resize_tag
 
+    def _setHpShape(self, pos):
+        find_list = []
+        show_tag = self._prop_show_tag()
+        visible_prop_shapes = list(compress(self.prop_shapes, show_tag))
+        for i, prop in enumerate(reversed(visible_prop_shapes)):
+            for shape in reversed([s for s in prop]):
+                if shape.containsPoint(pos) and \
+                                shape['keep'] == 1:
+                    find_list.append(shape)
+
+        if len(find_list) > 0:
+            self.hpShape = sorted(find_list)[0]
+            self.setToolTip(
+                "name: {}\nscore: {}".format(
+                self.hpShape.name, self.hpShape.score))
+        else:
+            self.hpShape = None
+        self.update()
+
     def _setHtShape(self, pos):
+        if self.showFilter and not self.showFilter[0]:
+            return
         find_list = []
         for shape in reversed([s for s in self.true_shapes]):
             if shape.containsPoint(pos):
@@ -362,11 +366,11 @@ class Canvas(QWidget):
 
         if len(find_list) > 0:
             self.htShape = sorted(find_list)[0]
+            self.setToolTip("name: {}".format(self.htShape.name))
             self.hpShape = None
         else:
             self.htShape = None
         self.update()
-
 
     def mousePressEvent(self, ev):
         pos = self.transformPos(ev.pos())
@@ -423,29 +427,25 @@ class Canvas(QWidget):
 
     def selectShapePoint(self, point):
         self.deSelectShape()
-        for i, prop in enumerate(reversed(self.prop_shapes)):
-            find = False
+        find_list = []
+        show_tag = self._prop_show_tag()
+        visible_prop_shapes = list(compress(self.prop_shapes, show_tag))
+        for i, prop in enumerate(reversed(visible_prop_shapes)):
             for shape in reversed([s for s in prop]):
                 if shape.containsPoint(point) and shape.keep == 1:
-                    shape.selected = True
-                    self.selectedShape = shape
-                    self.update()
-                    find = True
-                    break
-            if find:
-                break
+                    find_list.append(shape)
 
-        for shape in reversed([s for s in self.true_shapes]):
-            if shape.nearShape(point):
-                self.deSelectShape()
-                shape.selected = True
-                self.selectedShape = shape
-                self.update()
-                break
+        if not self.showFilter or self.showFilter[0]:
+            for shape in reversed([s for s in self.true_shapes]):
+                if shape.nearShape(point):
+                    find_list.append(shape)
+
+        if len(find_list) > 0:
+            self.selectedShape = sorted(find_list)[0]
+            self.selectedShape.selected = True
+            self.update()
 
         self.selectionChanged.emit(bool(self.selectedShape))
-
-
 
     def loadPixmap(self, pixmap):
         self.pixmap = pixmap
