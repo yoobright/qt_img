@@ -48,6 +48,21 @@ class Shape(object):
             return 0
 
     @property
+    def size(self):
+        if (self.xmin is not None) and (self.ymin is not None) and \
+                (self.xmax is not None) and (self.ymax is not None):
+            return QSize((self.xmax - self.xmin), (self.ymax - self.ymin))
+        else:
+            return 0
+
+    @property
+    def rect(self):
+        if (self.xmin is not None) and (self.ymin is not None) and \
+                (self.xmax is not None) and (self.ymax is not None):
+            return QRect(QPoint(self.xmin, self.ymin),
+                         self.size)
+
+    @property
     def points(self):
         if (self.xmin is not None) and (self.ymin is not None) and \
                 (self.xmax is not None) and (self.ymax is not None):

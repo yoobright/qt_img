@@ -14,7 +14,7 @@ from m_widgets.labelDialog import LabelDialog
 from m_widgets.viewDialog import viewDialog
 from m_widgets.jumpDialog import jumpDialog
 from m_utils.xmlFile import xmlFile
-from m_utils.m_io import NewReader
+from m_utils.m_io import NewReader, NewWriter
 from m_utils.conf import getLabelList
 from m_utils.utils import get_stat, sort_nicely
 
@@ -626,7 +626,42 @@ class MainWindow(QMainWindow, WindowMixin):
         if dir_path is not None and len(dir_path) > 1:
             dir_path = dir_path.replace('\\', '/')
             img_name = os.path.basename(self.imgFname)
-            self.canvas.saveXMl(img_name, dir_path)
+            self.saveXMl(img_name, dir_path)
+
+    def saveXMl(self, img_name=None, dir_path=None, pIdx=0):
+        if dir:
+            img_size = (self.canvas.pixmap.width(),
+                        self.canvas.pixmap.height(),
+                        3)
+            writer = NewWriter(img_name, img_size)
+
+            for shape in self.canvas.true_shapes:
+                if shape.mtag and self.advanced():
+                    mtag = shape.mtag
+                else:
+                    mtag =None
+                writer.addTrueBox(shape.xmin,
+                                  shape.ymin,
+                                  shape.xmax,
+                                  shape.ymax,
+                                  shape.name,
+                                  mtag)
+
+            if len(self.canvas.prop_shapes) > pIdx:
+                for shape in self.canvas.prop_shapes[pIdx]:
+                    if shape.mtag and self.advanced():
+                        mtag = shape.mtag
+                    else:
+                        mtag =None
+                    writer.addPropBox(shape.xmin,
+                                      shape.ymin,
+                                      shape.xmax,
+                                      shape.ymax,
+                                      shape.name,
+                                      shape.score,
+                                      shape.keep,
+                                      mtag)
+            print(writer.save(dir_path))
 
     def zoomRequest(self, delta, pos):
         units = delta / (8 * 15)

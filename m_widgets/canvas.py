@@ -301,8 +301,9 @@ class Canvas(QWidget):
                         self.selectedShape.xmax = min(int(pos.x()),
                                                       self.pixmap.width() - 1)
 
-            self._setHpShape(pos)
-            self._setHtShape(pos)
+            in_p = self._setHpShape(ev, pos)
+            in_t = self._setHtShape(ev, pos)
+            self.update()
 
             if self.selectedShape and self.selectedShape.b_type == 'true':
                 resize_tag = None
@@ -337,8 +338,9 @@ class Canvas(QWidget):
                     if resize_tag is not None:
                         self.resize_tag = resize_tag
 
-    def _setHpShape(self, pos):
+    def _setHpShape(self, ev, pos):
         find_list = []
+        ret = False
         show_tag = self._prop_show_tag()
         visible_prop_shapes = list(compress(self.prop_shapes, show_tag))
         for i, prop in enumerate(reversed(visible_prop_shapes)):
@@ -349,28 +351,40 @@ class Canvas(QWidget):
 
         if len(find_list) > 0:
             self.hpShape = sorted(find_list)[0]
-            self.setToolTip(
-                "name: {}\nscore: {}".format(
-                self.hpShape.name, self.hpShape.score))
+            if not self.selectedShape:
+                QToolTip.showText(
+                    ev.globalPos(), "name: {}\nscore: {}".format(
+                    self.hpShape.name, self.hpShape.score),
+                    self,
+                     self.hpShape.rect
+                )
+            ret = True
         else:
             self.hpShape = None
-        self.update()
+        return ret
 
-    def _setHtShape(self, pos):
-        if self.showFilter and not self.showFilter[0]:
-            return
+    def _setHtShape(self, ev, pos):
         find_list = []
+        ret = False
+        if self.showFilter and not self.showFilter[0]:
+            return ret
         for shape in reversed([s for s in self.true_shapes]):
             if shape.containsPoint(pos):
                 find_list.append(shape)
 
         if len(find_list) > 0:
             self.htShape = sorted(find_list)[0]
-            self.setToolTip("name: {}".format(self.htShape.name))
+            if not self.selectedShape:
+                QToolTip.showText(
+                    ev.globalPos(), "name: {}".format(
+                    self.htShape.name),
+                    self,
+                    self.htShape.rect)
             self.hpShape = None
+            ret = True
         else:
             self.htShape = None
-        self.update()
+        return ret
 
     def mousePressEvent(self, ev):
         pos = self.transformPos(ev.pos())
@@ -488,38 +502,6 @@ class Canvas(QWidget):
         self.restoreCursor()
         self.pixmap = None
         self.update()
-
-    def saveXMl(self, img_name=None, dir_path=None, pIdx=0):
-        if dir:
-            img_size = (self.pixmap.width(), self.pixmap.height(), 3)
-            writer = NewWriter(img_name, img_size)
-
-            for shape in self.true_shapes:
-                if shape.mtag:
-                    mtag = shape.mtag
-                else:
-                    mtag =None
-                writer.addTrueBox(shape.xmin,
-                                  shape.ymin,
-                                  shape.xmax,
-                                  shape.ymax,
-                                  shape.name,
-                                  mtag)
-            if len(self.prop_shapes) > 0:
-                for shape in self.prop_shapes[pIdx]:
-                    if shape.mtag:
-                        mtag = shape.mtag
-                    else:
-                        mtag =None
-                    writer.addPropBox(shape.xmin,
-                                      shape.ymin,
-                                      shape.xmax,
-                                      shape.ymax,
-                                      shape.name,
-                                      shape.score,
-                                      shape.keep,
-                                      mtag)
-            print(writer.save(dir_path))
 
 
 
