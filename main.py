@@ -177,12 +177,14 @@ class MainWindow(QMainWindow, WindowMixin):
         quit_action = action('&Quit', self.close,
                              None, None, u'Quit application')
         set_anno_action = action('Set XML Dir', self.setXMLDir,
-                             None, None, u'Set XML Dir')
+                                  None, None, u'Set XML Dir')
         set_m_anno_action = action('Set Multi XML Dir', self.setMultiXMLDir,
-                             None, None, u'Set Multi XML Dir')
+                                   None, None, u'Set Multi XML Dir')
         set_s_dir_action = action('Set XML Save Dir', self.setXMLSaveDir,
-                             None, None, u'Set XML Save Dir')
-
+                                  None, None, u'Set XML Save Dir')
+        advanced_action = action('&Advanced Mode', self.toggleAdvancedMode,
+                                 None, None, u'Switch to advanced mode',
+                                 checkable=True)
         fit_action = action('&Fit Window', self.fitWindowSize,
                              None, None, u'Fit window')
         jump_action = action('&Jump To...', self.jumpToImg,
@@ -229,10 +231,12 @@ class MainWindow(QMainWindow, WindowMixin):
             set_anno=set_anno_action,
             set_m_anno=set_m_anno_action,
             set_s_dir=set_s_dir_action,
+            advanced=advanced_action,
             fit=fit_action,
             jump=jump_action,
             view=view_action,
             stat=stat_action,
+            all_stat=all_stat_action,
             info=info_action,
             draw=draw_action,
             next=next_action,
@@ -251,23 +255,8 @@ class MainWindow(QMainWindow, WindowMixin):
         # set menus action
         self.menus = struct(file=self.menu('&File'), view=self.menu('&View'),
                             edit=self.menu('&Edit'), stat=self.menu('&Stat'))
-        addActions(self.menus.file, (open_action,
-                                     set_anno_action,
-                                     set_m_anno_action,
-                                     None,
-                                     set_s_dir_action,
-                                     None, quit_action))
-        addActions(self.menus.view, (fit_action, jump_action, None,
-                                     view_action))
-        addActions(self.menus.edit, (del_box_action, None,
-                                     set_true_action, set_dev_action,
-                                     set_error_action, res_box_action))
-        addActions(self.menus.stat, (stat_action, all_stat_action))
-        self.menuBar().addAction(info_action)
-        # set canvas action
-        addActions(self.canvas.menus, (del_box_action, None,
-                                       set_true_action, set_dev_action,
-                                       set_error_action, res_box_action))
+        self.setDefaultContext()
+
 
     def scanAllImages(self, folderPath):
         name_filter = ['*.jpeg', '*.jpg', '*.png', '*.bmp']
@@ -361,6 +350,72 @@ class MainWindow(QMainWindow, WindowMixin):
     def setEditMode(self):
         self.canvas.setMode('edit')
         self.actions.draw.setChecked(False)
+
+    def setDefaultContext(self):
+        file_actions = (self.actions.open,
+                        self.actions.set_anno, None,
+                        self.actions.set_s_dir, None,
+                        self.actions.quit)
+        view_actions = (self.actions.advanced, None,
+                        self.actions.fit,
+                        self.actions.jump, None,
+                        self.actions.view)
+        edit_actions = (self.actions.del_box,)
+
+        self.menus.file.clear()
+        addActions(self.menus.file, file_actions)
+        self.menus.view.clear()
+        addActions(self.menus.view, view_actions)
+        self.menus.edit.clear()
+        addActions(self.menus.edit, edit_actions)
+        self.menus.stat.clear()
+        self.menuBar().addAction(self.actions.info)
+        # set canvas action
+        self.canvas.menus.clear()
+        addActions(self.canvas.menus, edit_actions)
+
+    def setAdvanceContext(self):
+        file_actions = (self.actions.open,
+                        self.actions.set_anno,
+                        self.actions.set_m_anno, None,
+                        self.actions.set_s_dir, None,
+                        self.actions.quit)
+        view_actions = (self.actions.advanced, None,
+                        self.actions.fit,
+                        self.actions.jump, None,
+                        self.actions.view)
+        edit_actions = (self.actions.del_box, None,
+                        self.actions.set_true,
+                        self.actions.set_dev,
+                        self.actions.set_error,
+                        self.actions.res_box)
+        stat_actions = (self.actions.stat,
+                        self.actions.all_stat)
+
+        self.menus.file.clear()
+        addActions(self.menus.file, file_actions)
+        self.menus.view.clear()
+        addActions(self.menus.view, view_actions)
+        self.menus.edit.clear()
+        addActions(self.menus.edit, edit_actions)
+        self.menus.stat.clear()
+        addActions(self.menus.stat, stat_actions)
+        self.menuBar().addAction(self.actions.info)
+        # set canvas action
+        self.canvas.menus.clear()
+        addActions(self.canvas.menus, edit_actions)
+
+    def advanced(self):
+        return self.actions.advanced.isChecked()
+
+    def toggleAdvancedMode(self, value=True):
+        self.populateModeActions()
+
+    def populateModeActions(self):
+        if self.advanced():
+            self.setAdvanceContext()
+        else:
+            self.setDefaultContext()
 
     def fitWindowSize(self):
         if self.canvas.pixmap:
@@ -484,8 +539,10 @@ class MainWindow(QMainWindow, WindowMixin):
         print("xmlDir: {}".format(self.xmlDir))
         print("xmlFname: {}".format(self.xmlFname))
         print("curr_canvas_scale: {}".format(self.curr_canvas_scale))
-        print("true_meta_shapes: {}".format(self.canvas.true_shapes))
-        print("prop_meta_shapes: {}".format(self.canvas.prop_shapes))
+        print("true_shapes: {}".format(self.canvas.true_shapes))
+        prop_shapes =[[s for s in shapes if s.keep]
+                      for shapes in self.canvas.prop_shapes]
+        print("prop_shapes: {}".format(prop_shapes))
         print("selectedShape: {}".format(self.canvas.selectedShape))
 
 
@@ -611,8 +668,6 @@ class MainWindow(QMainWindow, WindowMixin):
                 self.actions.set_dev.setEnabled(True)
                 self.actions.set_error.setEnabled(True)
                 self.actions.res_box.setEnabled(True)
-
-
 
     def newShape(self):
         text = self.labelDialog.popUp()
