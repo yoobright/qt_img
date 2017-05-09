@@ -40,6 +40,11 @@ class LabelDialog(QDialog):
 
         self.setLayout(layout)
 
+    def updateItem(self, listItem):
+        self.listWidget.clear()
+        for item in listItem:
+            self.listWidget.addItem(item)
+
     def validate(self):
         try:
             if self.edit.text().trimmed():

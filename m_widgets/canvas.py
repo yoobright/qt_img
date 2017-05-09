@@ -268,7 +268,9 @@ class Canvas(QWidget):
         else:
             # edit mode
             self._resizeShape(ev, pos)
-            self._setHShape(ev, pos)
+            in_shape = self._setHShape(ev, pos)
+            if not in_shape:
+                QToolTip.hideText()
             self.update()
             self._setResizeTag(ev, pos)
 
@@ -370,8 +372,12 @@ class Canvas(QWidget):
                 self.htShape = find_shape
                 if not self.selectedShape:
                     QToolTip.showText(
-                        ev.globalPos(), "name: {}".format(
-                        self.htShape.name),
+                        ev.globalPos(),
+                        "type: true\nname: {}\nsize: {}".format(
+                            self.htShape.name,
+                            (self.htShape.size.width(),
+                             self.htShape.size.height())
+                        ),
                         self,
                         self.htShape.rect
                     )
@@ -379,8 +385,13 @@ class Canvas(QWidget):
                 self.hpShape = find_shape
                 if not self.selectedShape:
                     QToolTip.showText(
-                        ev.globalPos(), "name: {}\nscore: {}".format(
-                        self.hpShape.name, self.hpShape.score),
+                        ev.globalPos(),
+                        "type: prop\nname: {}\nscore: {}\nsize: {}".format(
+                            self.hpShape.name,
+                            self.hpShape.score,
+                            (self.hpShape.size.width(),
+                             self.hpShape.size.height())
+                        ),
                         self,
                         self.hpShape.rect
                     )
@@ -410,7 +421,6 @@ class Canvas(QWidget):
                     self.newShape.emit()
                 self.rect_points = None
                 self.current_shape = None
-                print('draw done')
                 self.repaint()
             self.resize_tag = None
         ev.accept()

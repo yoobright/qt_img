@@ -39,6 +39,7 @@ def u(s):
 
 __appname__ = 'qt_img'
 
+
 class ToolBar(QToolBar):
     def __init__(self, title):
         super(ToolBar, self).__init__(title)
@@ -566,7 +567,7 @@ class MainWindow(QMainWindow, WindowMixin):
         'error_box': 0,
         'miss_box': 0,
         }
-        if len(self.imageList) > 0:
+        if self.imageList and len(self.imageList) > 0:
             for image_name in self.imageList:
                 xml_file = self.getXMLFileName(image_name)
                 if xml_file:
@@ -586,7 +587,6 @@ class MainWindow(QMainWindow, WindowMixin):
             self.loadXMLFile()
         else:
             self.resetState()
-
 
     def openNextImg(self):
         if (self.imageList is None) or (len(self.imageList) <= 0):
@@ -715,7 +715,12 @@ class MainWindow(QMainWindow, WindowMixin):
         if text is not None:
             self.canvas.current_shape.name = str(text)
             self.canvas.addTrueShape()
+            print('draw done')
             self.setEditMode()
+
+            if text not in self.labelList:
+                self.labelList.insert(0, str(text))
+                self.labelDialog.updateItem(self.labelList)
 
     def draw(self):
         if self.canvas.isEditMode():
