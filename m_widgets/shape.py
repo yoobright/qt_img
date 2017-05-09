@@ -1,6 +1,12 @@
 # -*- coding:utf-8 -*-
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except ImportError:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
+
 from m_utils.utils import distance
 
 GT_LINE_COLOR = QColor("#7FFF00")

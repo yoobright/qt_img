@@ -1,6 +1,11 @@
 # -*- coding:utf-8 -*-
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except ImportError:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
 
 TRUE_STYLE = 0
 PROP_1_STYLE = 1

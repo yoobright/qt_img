@@ -6,8 +6,14 @@ import sys
 from copy import deepcopy
 from functools import partial
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except ImportError:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
+
 from m_widgets.canvas import Canvas
 from m_widgets.shape import TrueShape
 from m_widgets.labelDialog import LabelDialog

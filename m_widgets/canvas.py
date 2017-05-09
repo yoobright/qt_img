@@ -2,8 +2,15 @@
 from __future__ import print_function, division
 from math import sqrt, floor
 from itertools import compress
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except ImportError:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
+
 from shape import Shape, TrueShape
 from m_utils.m_io import NewWriter
 from m_utils.utils import compute_iou
@@ -57,6 +64,7 @@ class Canvas(QWidget):
         self.selectedShape = None
         self.showFilter = None
         self.menus = QMenu()
+        self.menus.setContextMenuPolicy(Qt.PreventContextMenu)
         self.resize_tag = None
         # Set widget options
         self.setMouseTracking(True)
@@ -259,131 +267,123 @@ class Canvas(QWidget):
             return
         else:
             # edit mode
-            if self.resize_tag is None:
-                self.setCursor(CURSOR_DEFAULT)
-            elif self.selectedShape and self.selectedShape.b_type == 'true':
-                if self.resize_tag == RESIZE_TOP_LEFT:
-                    if pos.x() < self.selectedShape.xmax - 5 and \
-                       pos.y() < self.selectedShape.ymax - 5:
-                        self.selectedShape.xmin = max(int(pos.x()), 1)
-                        self.selectedShape.ymin = max(int(pos.y()), 1)
-                elif self.resize_tag == RESIZE_TOP_RIGHT:
-                    if pos.x() > self.selectedShape.xmin + 5 and \
-                       pos.y() < self.selectedShape.ymax - 5:
-                        self.selectedShape.xmax = min(int(pos.x()),
-                                                      self.pixmap.width() - 1)
-                        self.selectedShape.ymin = max(int(pos.y()), 1)
-                elif self.resize_tag == RESIZE_BOTTOM_LEFT:
-                    if pos.x() < self.selectedShape.xmax - 5 and \
-                       pos.y() > self.selectedShape.ymin + 5:
-                        self.selectedShape.xmin = max(int(pos.x()), 1)
-                        self.selectedShape.ymax = min(int(pos.y()),
-                                                      self.pixmap.height() - 1)
-                elif self.resize_tag == RESIZE_BOTTOM_RIGHT:
-                    if pos.x() > self.selectedShape.xmin + 5 and \
-                       pos.y() > self.selectedShape.ymin + 5:
-                        self.selectedShape.xmax = min(int(pos.x()),
-                                                      self.pixmap.width() - 1)
-                        self.selectedShape.ymax = min(int(pos.y()),
-                                                      self.pixmap.height() - 1)
-                elif self.resize_tag == RESIZE_TOP:
-                    if pos.y() < self.selectedShape.ymax - 5:
-                        self.selectedShape.ymin = max(int(pos.y()), 1)
-                elif self.resize_tag == RESIZE_BOTTOM:
-                    if pos.y() > self.selectedShape.ymin + 5:
-                        self.selectedShape.ymax = min(int(pos.y()),
-                                                      self.pixmap.height() - 1)
-                elif self.resize_tag == RESIZE_LEFT:
-                    if pos.x() < self.selectedShape.xmax - 5:
-                        self.selectedShape.xmin = max(int(pos.x()), 1)
-                elif self.resize_tag == RESIZE_RIGHT:
-                    if pos.x() > self.selectedShape.xmin + 5:
-                        self.selectedShape.xmax = min(int(pos.x()),
-                                                      self.pixmap.width() - 1)
-
-            in_p = self._setHpShape(ev, pos)
-            in_t = self._setHtShape(ev, pos)
+            self._resizeShape(ev, pos)
+            self._setHShape(ev, pos)
             self.update()
+            self._setResizeTag(ev, pos)
 
-            if self.selectedShape and self.selectedShape.b_type == 'true':
-                resize_tag = None
-                if self.selectedShape.nearTopLeft(pos):
-                    self.setCursor(CURSOR_SIZE_F)
-                    resize_tag = RESIZE_TOP_LEFT
-                elif self.selectedShape.nearTopRight(pos):
-                    self.setCursor(CURSOR_SIZE_B)
-                    resize_tag = RESIZE_TOP_RIGHT
-                elif self.selectedShape.nearBottomLeft(pos):
-                    self.setCursor(CURSOR_SIZE_B)
-                    resize_tag = RESIZE_BOTTOM_LEFT
-                elif self.selectedShape.nearBottomRight(pos):
-                    self.setCursor(CURSOR_SIZE_F)
-                    resize_tag = RESIZE_BOTTOM_RIGHT
-                elif self.selectedShape.nearTop(pos):
-                    self.setCursor(CURSOR_SIZE_V)
-                    resize_tag = RESIZE_TOP
-                elif self.selectedShape.nearBottom(pos):
-                    self.setCursor(CURSOR_SIZE_V)
-                    resize_tag = RESIZE_BOTTOM
-                elif self.selectedShape.nearLeft(pos):
-                    self.setCursor(CURSOR_SIZE_H)
-                    resize_tag = RESIZE_LEFT
-                elif self.selectedShape.nearRight(pos):
-                    self.setCursor(CURSOR_SIZE_H)
-                    resize_tag = RESIZE_RIGHT
-                else:
-                    self.resize_tag = None
+    def _setResizeTag(self, ev, pos):
+        if self.selectedShape and self.selectedShape.b_type == 'true':
+            resize_tag = None
+            if self.selectedShape.nearTopLeft(pos):
+                self.setCursor(CURSOR_SIZE_F)
+                resize_tag = RESIZE_TOP_LEFT
+            elif self.selectedShape.nearTopRight(pos):
+                self.setCursor(CURSOR_SIZE_B)
+                resize_tag = RESIZE_TOP_RIGHT
+            elif self.selectedShape.nearBottomLeft(pos):
+                self.setCursor(CURSOR_SIZE_B)
+                resize_tag = RESIZE_BOTTOM_LEFT
+            elif self.selectedShape.nearBottomRight(pos):
+                self.setCursor(CURSOR_SIZE_F)
+                resize_tag = RESIZE_BOTTOM_RIGHT
+            elif self.selectedShape.nearTop(pos):
+                self.setCursor(CURSOR_SIZE_V)
+                resize_tag = RESIZE_TOP
+            elif self.selectedShape.nearBottom(pos):
+                self.setCursor(CURSOR_SIZE_V)
+                resize_tag = RESIZE_BOTTOM
+            elif self.selectedShape.nearLeft(pos):
+                self.setCursor(CURSOR_SIZE_H)
+                resize_tag = RESIZE_LEFT
+            elif self.selectedShape.nearRight(pos):
+                self.setCursor(CURSOR_SIZE_H)
+                resize_tag = RESIZE_RIGHT
 
-                if Qt.LeftButton & ev.buttons():
-                    if resize_tag is not None:
-                        self.resize_tag = resize_tag
+            if Qt.LeftButton & ev.buttons():
+                    self.resize_tag = resize_tag
 
-    def _setHpShape(self, ev, pos):
+    def _resizeShape(self, ev, pos):
+        if self.resize_tag is None:
+            self.setCursor(CURSOR_DEFAULT)
+        elif self.selectedShape and self.selectedShape.b_type == 'true':
+            if self.resize_tag == RESIZE_TOP_LEFT:
+                if pos.x() < self.selectedShape.xmax - 5 and \
+                   pos.y() < self.selectedShape.ymax - 5:
+                    self.selectedShape.xmin = max(int(pos.x()), 1)
+                    self.selectedShape.ymin = max(int(pos.y()), 1)
+            elif self.resize_tag == RESIZE_TOP_RIGHT:
+                if pos.x() > self.selectedShape.xmin + 5 and \
+                   pos.y() < self.selectedShape.ymax - 5:
+                    self.selectedShape.xmax = min(int(pos.x()),
+                                                  self.pixmap.width() - 1)
+                    self.selectedShape.ymin = max(int(pos.y()), 1)
+            elif self.resize_tag == RESIZE_BOTTOM_LEFT:
+                if pos.x() < self.selectedShape.xmax - 5 and \
+                   pos.y() > self.selectedShape.ymin + 5:
+                    self.selectedShape.xmin = max(int(pos.x()), 1)
+                    self.selectedShape.ymax = min(int(pos.y()),
+                                                  self.pixmap.height() - 1)
+            elif self.resize_tag == RESIZE_BOTTOM_RIGHT:
+                if pos.x() > self.selectedShape.xmin + 5 and \
+                   pos.y() > self.selectedShape.ymin + 5:
+                    self.selectedShape.xmax = min(int(pos.x()),
+                                                  self.pixmap.width() - 1)
+                    self.selectedShape.ymax = min(int(pos.y()),
+                                                  self.pixmap.height() - 1)
+            elif self.resize_tag == RESIZE_TOP:
+                if pos.y() < self.selectedShape.ymax - 5:
+                    self.selectedShape.ymin = max(int(pos.y()), 1)
+            elif self.resize_tag == RESIZE_BOTTOM:
+                if pos.y() > self.selectedShape.ymin + 5:
+                    self.selectedShape.ymax = min(int(pos.y()),
+                                                  self.pixmap.height() - 1)
+            elif self.resize_tag == RESIZE_LEFT:
+                if pos.x() < self.selectedShape.xmax - 5:
+                    self.selectedShape.xmin = max(int(pos.x()), 1)
+            elif self.resize_tag == RESIZE_RIGHT:
+                if pos.x() > self.selectedShape.xmin + 5:
+                    self.selectedShape.xmax = min(int(pos.x()),
+                                                  self.pixmap.width() - 1)
+
+    def _setHShape(self, ev, pos):
         find_list = []
         ret = False
         show_tag = self._prop_show_tag()
         visible_prop_shapes = list(compress(self.prop_shapes, show_tag))
         for i, prop in enumerate(reversed(visible_prop_shapes)):
             for shape in reversed([s for s in prop]):
-                if shape.containsPoint(pos) and \
-                                shape['keep'] == 1:
+                if shape.containsPoint(pos) and shape.keep == 1:
                     find_list.append(shape)
 
-        if len(find_list) > 0:
-            self.hpShape = sorted(find_list)[0]
-            if not self.selectedShape:
-                QToolTip.showText(
-                    ev.globalPos(), "name: {}\nscore: {}".format(
-                    self.hpShape.name, self.hpShape.score),
-                    self,
-                     self.hpShape.rect
-                )
-            ret = True
-        else:
-            self.hpShape = None
-        return ret
+        if not self.showFilter or self.showFilter[0]:
+            for shape in reversed([s for s in self.true_shapes]):
+                if shape.nearShape(pos):
+                    find_list.append(shape)
 
-    def _setHtShape(self, ev, pos):
-        find_list = []
-        ret = False
-        if self.showFilter and not self.showFilter[0]:
-            return ret
-        for shape in reversed([s for s in self.true_shapes]):
-            if shape.containsPoint(pos):
-                find_list.append(shape)
-
+        self.htShape = None
+        self.hpShape = None
         if len(find_list) > 0:
-            self.htShape = sorted(find_list)[0]
-            if not self.selectedShape:
-                QToolTip.showText(
-                    ev.globalPos(), "name: {}".format(
-                    self.htShape.name),
-                    self,
-                    self.htShape.rect)
-            self.hpShape = None
+            find_shape = sorted(find_list)[0]
             ret = True
-        else:
-            self.htShape = None
+            if find_shape.b_type == 'true':
+                self.htShape = find_shape
+                if not self.selectedShape:
+                    QToolTip.showText(
+                        ev.globalPos(), "name: {}".format(
+                        self.htShape.name),
+                        self,
+                        self.htShape.rect
+                    )
+            elif find_shape.b_type == 'prop':
+                self.hpShape = find_shape
+                if not self.selectedShape:
+                    QToolTip.showText(
+                        ev.globalPos(), "name: {}\nscore: {}".format(
+                        self.hpShape.name, self.hpShape.score),
+                        self,
+                        self.hpShape.rect
+                    )
         return ret
 
     def mousePressEvent(self, ev):
@@ -398,13 +398,13 @@ class Canvas(QWidget):
         else:
             self.selectShapePoint(pos)
             self.repaint()
+        ev.accept()
 
     def mouseReleaseEvent(self, ev):
         if ev.button() == Qt.RightButton:
             self.restoreCursor()
             self.menus.exec_(ev.globalPos())
-
-        if ev.button() == Qt.LeftButton:
+        elif ev.button() == Qt.LeftButton:
             if self.current_shape and self.rect_points:
                 if self.rect_points[0] != self.rect_points[1]:
                     self.newShape.emit()
@@ -413,6 +413,7 @@ class Canvas(QWidget):
                 print('draw done')
                 self.repaint()
             self.resize_tag = None
+        ev.accept()
 
     def addTrueShape(self):
         if self.current_shape and self.rect_points:
