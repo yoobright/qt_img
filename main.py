@@ -721,6 +721,7 @@ class MainWindow(QMainWindow, WindowMixin):
             if text not in self.labelList:
                 self.labelList.insert(0, str(text))
                 self.labelDialog.updateItem(self.labelList)
+            return True
 
     def draw(self):
         if self.canvas.isEditMode():

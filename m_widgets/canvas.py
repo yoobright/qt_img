@@ -65,6 +65,7 @@ class Canvas(QWidget):
         self.showFilter = None
         self.menus = QMenu()
         self.menus.setContextMenuPolicy(Qt.PreventContextMenu)
+        self.setContextMenuPolicy(Qt.PreventContextMenu)
         self.resize_tag = None
         # Set widget options
         self.setMouseTracking(True)
@@ -215,8 +216,10 @@ class Canvas(QWidget):
     def setMode(self, mode):
         if mode == 'edit':
             self.mode = EDIT
+            self.setCursor(CURSOR_DEFAULT)
         elif mode == 'draw':
             self.mode = DRAW
+            self.setCursor(CURSOR_DRAW)
 
     def isSelectedPropShape(self):
         return bool(self.selectedShape and self.selectedShape.b_type == 'prop')
@@ -255,8 +258,6 @@ class Canvas(QWidget):
 
         if self.isDrawMode():
             # draw mode
-            self.setCursor(CURSOR_DRAW)
-        #     self.overrideCursor(CURSOR_DRAW)
             if self.current_shape and Qt.LeftButton & ev.buttons():
                 if self.outOfPixmap(pos):
                     pos = self.intersectionPoint(self.rect_points[0], pos)
@@ -276,7 +277,6 @@ class Canvas(QWidget):
 
     def _setResizeTag(self, ev, pos):
         if self.selectedShape and self.selectedShape.b_type == 'true':
-            resize_tag = None
             if self.selectedShape.nearTopLeft(pos):
                 self.setCursor(CURSOR_SIZE_F)
                 resize_tag = RESIZE_TOP_LEFT
@@ -301,14 +301,16 @@ class Canvas(QWidget):
             elif self.selectedShape.nearRight(pos):
                 self.setCursor(CURSOR_SIZE_H)
                 resize_tag = RESIZE_RIGHT
+            else:
+                self.setCursor(CURSOR_DEFAULT)
+                resize_tag = None
 
             if Qt.LeftButton & ev.buttons():
                     self.resize_tag = resize_tag
 
     def _resizeShape(self, ev, pos):
-        if self.resize_tag is None:
-            self.setCursor(CURSOR_DEFAULT)
-        elif self.selectedShape and self.selectedShape.b_type == 'true':
+        if self.resize_tag is not None and self.selectedShape and \
+                self.selectedShape.b_type == 'true':
             if self.resize_tag == RESIZE_TOP_LEFT:
                 if pos.x() < self.selectedShape.xmax - 5 and \
                    pos.y() < self.selectedShape.ymax - 5:
