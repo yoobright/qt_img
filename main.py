@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, division
+from __future__ import print_function, division, unicode_literals
 
 import os
 import sys
@@ -24,18 +24,19 @@ from m_utils.m_io import NewReader, NewWriter
 from m_utils.conf import getLabelList
 from m_utils.utils import get_stat, sort_nicely
 
-try:
-    _fromUtf8 = QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s):
-        return s
+def ustr(x):
+    '''py2/py3 unicode helper'''
 
+    if sys.version_info < (3, 0, 0):
+        if type(x) == str:
+            return x.decode('utf-8')
+        if int(QT_VERSION_STR[0]) == 4 and type(x) == QString:
+            return unicode(x)
 
-def u(s):
-    if sys.version_info[0] == 2:
-        return s.decode('utf-8')
-    if sys.version_info[0] == 3:
-        return s
+        return x
+    else:
+        return x  # py3
+
 
 __appname__ = 'qt_img'
 
@@ -99,13 +100,6 @@ def newAction(parent, text, slot=None, shortcut=None, icon=None,
     a.setEnabled(enabled)
     return a
 
-def read(filename, default=None):
-    try:
-        with open(filename, 'rb') as f:
-            return f.read()
-    except:
-        return default
-
 
 class WindowMixin(object):
     def menu(self, title, actions=None):
@@ -146,7 +140,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.curr_canvas_scale = 1.0
 
         self.canvas = Canvas()
-        self.canvas.setObjectName(_fromUtf8("canvas"))
+        self.canvas.setObjectName("canvas")
         self.canvas.zoomRequest.connect(self.zoomRequest)
         self.canvas.mouseMoveSignal.connect(self.statusBar().showMessage)
         self.canvas.newShape.connect(self.newShape)
@@ -264,7 +258,6 @@ class MainWindow(QMainWindow, WindowMixin):
                             edit=self.menu('&Edit'), stat=self.menu('&Stat'))
         self.setDefaultContext()
 
-
     def scanAllImages(self, folderPath):
         name_filter = ['*.jpeg', '*.jpg', '*.png', '*.bmp']
         images = []
@@ -272,7 +265,7 @@ class MainWindow(QMainWindow, WindowMixin):
         file_dir.setNameFilters(name_filter)
         file_dir.setSorting(QDir.Name)
 
-        images = [u(os.path.abspath(os.path.join(folderPath, str(image))))
+        images = [os.path.abspath(os.path.join(folderPath, str(image)))
                   for image in file_dir.entryList()]
         # for windows dir
         images = [x.replace('\\', '/') for x in images]
@@ -286,15 +279,22 @@ class MainWindow(QMainWindow, WindowMixin):
         #            for fmt in QImageReader.supportedImageFormats()]
         formats = "*.bmp *.jpeg *.jpg *.png"
         filters = "Image & Label files (%s)" % formats
-        filename = str(QFileDialog.getOpenFileName(self,
+        filename = QFileDialog.getOpenFileName(self,
             '%s - Choose Image file' % __appname__,
-            path, filters))
+            path, filters)
+
+        # for qt5 compatibility
         if filename:
+            if isinstance(filename, (tuple, list)):
+                filename = filename[0]
+
+        if filename:
+            filename = ustr(filename)
             self.imageDir = os.path.dirname(filename)
             self.imageList = self.scanAllImages(self.imageDir)
 
             if filename in self.imageList:
-                self.imageIdx = self.imageList.index(u(filename))
+                self.imageIdx = self.imageList.index(ustr(filename))
             if not self.loadFile(filename):
                 self.resetState()
 
@@ -342,7 +342,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.adjustSize()
             self.canvas.update()
             self.setEditMode()
-            self.imgFname = u(filename)
+            self.imgFname = ustr(filename)
             num_tag = u""
             if len(self.imageList) > 1:
                 num_tag = u"[{}/{}]".format(self.imageIdx + 1,
@@ -437,7 +437,7 @@ class MainWindow(QMainWindow, WindowMixin):
         curr_path = os.path.dirname(self.imgFname) \
                 if self.imgFname else '.'
 
-        dir_path = str(QFileDialog.getExistingDirectory(self,
+        dir_path = ustr(QFileDialog.getExistingDirectory(self,
             '%s - Open Directory' % __appname__,  curr_path,
             QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
 
@@ -451,7 +451,7 @@ class MainWindow(QMainWindow, WindowMixin):
         curr_path = os.path.dirname(self.imgFname) \
                 if self.imgFname else '.'
 
-        dir_path = str(QFileDialog.getExistingDirectory(self,
+        dir_path = ustr(QFileDialog.getExistingDirectory(self,
             '%s - Open Directory' % __appname__,  curr_path,
             QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
 
@@ -479,7 +479,7 @@ class MainWindow(QMainWindow, WindowMixin):
     def setXMLSaveDir(self):
         curr_path = os.path.dirname(self.imgFname) \
                 if self.imgFname else '.'
-        dir_path = str(QFileDialog.getExistingDirectory(self,
+        dir_path = ustr(QFileDialog.getExistingDirectory(self,
             '%s - Open Directory' % __appname__,  curr_path,
             QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
 
@@ -625,7 +625,7 @@ class MainWindow(QMainWindow, WindowMixin):
             else:
                 curr_path = os.path.dirname(self.imgFname) \
                     if self.imgFname else '.'
-                dir_path = str(QFileDialog.getExistingDirectory(self,
+                dir_path = ustr(QFileDialog.getExistingDirectory(self,
                     '%s - Open Directory' % __appname__,  curr_path,
                     QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
 

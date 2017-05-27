@@ -497,19 +497,30 @@ class Canvas(QWidget):
         return super(Canvas, self).minimumSizeHint()
 
     def wheelEvent(self, ev):
-        if ev.orientation() == Qt.Vertical:
-            mods = ev.modifiers()
-            if Qt.ControlModifier == int(mods):
-                # print('zoom')
-                # print(ev.delta())
-                self.zoomRequest.emit(ev.delta(), ev.pos())
-                # units = ev.delta() / (8 * 15)
-                # scale = 10
-                # self.scale += units * scale / 100
-                # # print(self.scale)
-                # self.adjustSize()
-                # self.update()
-        # ev.accept()
+        if int(QT_VERSION_STR[0]) == 4:
+            if ev.orientation() == Qt.Vertical:
+                v_delta = ev.delta()
+                h_delta = 0
+            else:
+                h_delta = ev.delta()
+                v_delta = 0
+        else:
+            delta = ev.angleDelta()
+            h_delta = delta.x()
+            v_delta = delta.y()
+
+        mods = ev.modifiers()
+        if Qt.ControlModifier == int(mods) and v_delta:
+            # print('zoom')
+            # print(ev.delta())
+            self.zoomRequest.emit(ev.delta(), ev.pos())
+            # units = ev.delta() / (8 * 15)
+            # scale = 10
+            # self.scale += units * scale / 100
+            # # print(self.scale)
+            # self.adjustSize()
+            # self.update()
+        ev.accept()
 
     def resetState(self):
         self.restoreCursor()
