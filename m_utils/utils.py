@@ -88,6 +88,7 @@ def sort_nicely(l):
     """
     return sorted(l, key=alphanum_key)
 
+
 class ViewStyle(object):
     def __init__(self, name, color):
         self.name = name
