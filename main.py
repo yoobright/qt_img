@@ -18,15 +18,16 @@ from m_widgets.canvas import Canvas
 from m_widgets.shape import TrueShape
 from m_widgets.labelDialog import LabelDialog
 from m_widgets.viewDialog import viewDialog
+from m_widgets.customViewDialog import customViewDialog
 from m_widgets.jumpDialog import jumpDialog
 from m_utils.xmlFile import xmlFile
 from m_utils.m_io import NewReader, NewWriter
-from m_utils.conf import getLabelList
+from m_utils.conf import getLabelList, getViewList
 from m_utils.utils import get_stat, sort_nicely
 
-def ustr(x):
-    '''py2/py3 unicode helper'''
 
+def ustr(x):
+    """py2/py3 unicode helper"""
     if sys.version_info < (3, 0, 0):
         if type(x) == str:
             return x.decode('utf-8')
@@ -131,6 +132,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.saveDir = None
         self.annoList = None
         self.labelList = getLabelList('conf/conf.xml')
+        self.viewList = getViewList('conf/conf.xml')
         self.xmlFname = None
         self.debug = debug
 
@@ -139,7 +141,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.resize(800, 600)
         self.curr_canvas_scale = 1.0
 
-        self.canvas = Canvas()
+        self.canvas = Canvas(self)
         self.canvas.setObjectName("canvas")
         self.canvas.zoomRequest.connect(self.zoomRequest)
         self.canvas.mouseMoveSignal.connect(self.statusBar().showMessage)
@@ -153,6 +155,10 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.viewDialog = viewDialog(parent=self, listItem=['default'])
         self.viewDialog.setWindowTitle('view class')
+
+        self.customViewDialog = customViewDialog(parent=self,
+                                                 listItem=self.viewList)
+        self.customViewDialog.setWindowTitle('custom true view')
 
         self.jumpDialog = jumpDialog(parent=self, img_len=0)
         self.jumpDialog.setWindowTitle('jump to ...')
@@ -192,6 +198,8 @@ class MainWindow(QMainWindow, WindowMixin):
                              None, None, u'&Jump To...')
         view_action = action('&View Class', self.viewClass,
                              None, None, u'view Class')
+        custom_action = action('&Custom True View', self.customView,
+                             None, None, u'Custom True View')
 
         stat_action = action('&Pic Stat', self.showStat,
                              None, None, u'Pic Stat')
@@ -236,6 +244,7 @@ class MainWindow(QMainWindow, WindowMixin):
             fit=fit_action,
             jump=jump_action,
             view=view_action,
+            custom=custom_action,
             stat=stat_action,
             all_stat=all_stat_action,
             info=info_action,
@@ -265,7 +274,7 @@ class MainWindow(QMainWindow, WindowMixin):
         file_dir.setNameFilters(name_filter)
         file_dir.setSorting(QDir.Name)
 
-        images = [os.path.abspath(os.path.join(folderPath, str(image)))
+        images = [os.path.abspath(os.path.join(folderPath, ustr(image)))
                   for image in file_dir.entryList()]
         # for windows dir
         images = [x.replace('\\', '/') for x in images]
@@ -273,7 +282,7 @@ class MainWindow(QMainWindow, WindowMixin):
         return images
 
     def openFile(self):
-        path = os.path.dirname(str(self.imgFname)) \
+        path = os.path.dirname(self.imgFname) \
             if self.imgFname else '.'
         # formats = ['*.%s' % str(fmt).lower() \
         #            for fmt in QImageReader.supportedImageFormats()]
@@ -366,7 +375,8 @@ class MainWindow(QMainWindow, WindowMixin):
         view_actions = (self.actions.advanced, None,
                         self.actions.fit,
                         self.actions.jump, None,
-                        self.actions.view)
+                        self.actions.view,
+                        self.actions.custom)
         edit_actions = (self.actions.del_box,)
 
         self.menus.file.clear()
@@ -390,7 +400,8 @@ class MainWindow(QMainWindow, WindowMixin):
         view_actions = (self.actions.advanced, None,
                         self.actions.fit,
                         self.actions.jump, None,
-                        self.actions.view)
+                        self.actions.view,
+                        self.actions.custom)
         edit_actions = (self.actions.del_box, None,
                         self.actions.set_true,
                         self.actions.set_dev,
@@ -535,6 +546,12 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def viewClass(self):
         view_state = self.viewDialog.popUp()
+        if view_state:
+            self.canvas.showFilter = view_state
+            self.canvas.update()
+
+    def customView(self):
+        view_state = self.customViewDialog.popUp()
         if view_state:
             self.canvas.showFilter = view_state
             self.canvas.update()

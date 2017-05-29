@@ -47,8 +47,9 @@ class Canvas(QWidget):
 
     epsilon = 11.0
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         super(Canvas, self).__init__(*args, **kwargs)
+        self.parent = parent
         self.mode = EDIT
         self.keep_only = True
         self.true_shapes = []
@@ -162,7 +163,14 @@ class Canvas(QWidget):
                 shape.fill = True
             else:
                 shape.fill = False
-            shape.paint(painter)
+            style = [x for x in self.parent.viewList if x.name == shape.name]
+            if len(style) > 0:
+                pen = QPen()
+                pen.setColor(QColor(style[0].color))
+                pen.setWidth(max(1, int(round(2.0 / self.scale))))
+            else:
+                pen = None
+            shape.paint(painter, pen=pen)
 
     def _prop_show_tag(self):
         if self.showFilter:

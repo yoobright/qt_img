@@ -3,4 +3,10 @@
         <label>head</label>
         <label>person</label>
     </labelList>
+    <customView>
+        <view>
+            <name>head</name>
+            <color>#FF69B4</color>
+        </view>
+    </customView>
 </configuration>
