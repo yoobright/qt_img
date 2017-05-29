@@ -8,5 +8,9 @@
             <name>head</name>
             <color>#FF69B4</color>
         </view>
+        <view>
+            <name>person</name>
+            <color>#9933ff</color>
+        </view>
     </customView>
 </configuration>

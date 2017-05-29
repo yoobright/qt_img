@@ -1,17 +1,10 @@
 # -*- coding:utf-8 -*-
 from __future__ import print_function, division
+import re
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 from lxml import etree
-
-
-class ViewStyle(object):
-    def __init__(self, name, color):
-        self.name = name
-        self.color = color
-
-    def __repr__(self):
-        return "<name: {}, color: {}>".format(self.name, self.color)
+from m_utils.utils import ViewStyle
 
 
 def getLabelList(filepath):
@@ -29,6 +22,13 @@ def getLabelList(filepath):
         label_list = [x.text for x in label_node.findall('label')]
         return label_list
 
+
+def check_color_code(str):
+    pattern = re.compile('^#(?:[0-9a-fA-F]{3}){1,2}$')
+    match = re.search(pattern, str)
+    return match
+
+
 def getViewList(filepath):
     parser = etree.XMLParser(encoding='utf-8')
     try:
@@ -45,10 +45,10 @@ def getViewList(filepath):
         for view in label_node.findall('view'):
             name = view.find('name').text
             color = view.find('color').text
-            if name and color:
+            if name and color and check_color_code(color):
                 view_list.append(ViewStyle(name, color))
         return view_list
 
 if __name__ == '__main__':
     a = getViewList('../conf/conf.xml')
-    print([x for x in a if x.name == 'xx'])
+    print(a)

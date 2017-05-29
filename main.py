@@ -3,6 +3,7 @@ from __future__ import print_function, division, unicode_literals
 
 import os
 import sys
+import pprint
 from copy import deepcopy
 from functools import partial
 
@@ -40,6 +41,8 @@ def ustr(x):
 
 
 __appname__ = 'qt_img'
+__home__ = os.path.dirname(os.path.realpath(__file__))
+conf_file = os.path.join(__home__, 'conf/conf.xml')
 
 
 class ToolBar(QToolBar):
@@ -131,8 +134,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.xmlDir = None
         self.saveDir = None
         self.annoList = None
-        self.labelList = getLabelList('conf/conf.xml')
-        self.viewList = getViewList('conf/conf.xml')
+        self.labelList = getLabelList(conf_file)
+        self.viewList = getViewList(conf_file)
         self.xmlFname = None
         self.debug = debug
 
@@ -551,10 +554,12 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.update()
 
     def customView(self):
-        view_state = self.customViewDialog.popUp()
-        if view_state:
-            self.canvas.showFilter = view_state
+        ret = self.customViewDialog.popUp()
+        if ret:
+            self.viewList = ret
             self.canvas.update()
+        self.customViewDialog.listItem = self.viewList
+        self.customViewDialog.updateListItem()
 
     def showInfo(self):
         print("imgFname: {}".format(self.imgFname))
@@ -563,11 +568,14 @@ class MainWindow(QMainWindow, WindowMixin):
         print("xmlDir: {}".format(self.xmlDir))
         print("xmlFname: {}".format(self.xmlFname))
         print("curr_canvas_scale: {}".format(self.curr_canvas_scale))
-        print("true_shapes: {}".format(self.canvas.true_shapes))
+        print("true_shapes: ")
+        pprint.pprint(self.canvas.true_shapes, indent=2)
         prop_shapes =[[s for s in shapes if s.keep]
                       for shapes in self.canvas.prop_shapes]
-        print("prop_shapes: {}".format(prop_shapes))
+        print("prop_shapes: ")
+        pprint.pprint(prop_shapes, indent=2)
         print("selectedShape: {}".format(self.canvas.selectedShape))
+        print("viewList: {}".format(self.viewList))
 
 
     def showStat(self):
