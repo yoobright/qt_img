@@ -521,7 +521,7 @@ class Canvas(QWidget):
         if Qt.ControlModifier == int(mods) and v_delta:
             # print('zoom')
             # print(ev.delta())
-            self.zoomRequest.emit(ev.delta(), ev.pos())
+            self.zoomRequest.emit(v_delta, ev.pos())
             # units = ev.delta() / (8 * 15)
             # scale = 10
             # self.scale += units * scale / 100
