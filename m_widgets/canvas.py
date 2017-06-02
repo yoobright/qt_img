@@ -11,7 +11,7 @@ except ImportError:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
 
-from shape import Shape, TrueShape
+from m_widgets.shape import Shape, TrueShape
 from m_utils.m_io import NewWriter
 from m_utils.utils import compute_iou
 from m_utils.utils import read, distance
