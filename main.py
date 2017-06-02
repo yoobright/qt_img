@@ -5,10 +5,17 @@ import os
 import sys
 import pprint
 import time
+import re
 import traceback
-from io import StringIO
-from copy import deepcopy
 from functools import partial
+
+PY3 = bool(sys.version_info[0] >= 3)
+PY2 = bool(sys.version_info[0] == 2)
+if PY3:
+    from io import StringIO
+else:
+    from StringIO import StringIO
+
 
 try:
     from PyQt5.QtGui import *
@@ -32,7 +39,7 @@ from m_utils.utils import get_stat, sort_nicely
 
 def ustr(x):
     """py2/py3 unicode helper"""
-    if sys.version_info < (3, 0, 0):
+    if PY2:
         if type(x) == str:
             return x.decode('utf-8')
         if int(QT_VERSION_STR[0]) == 4 and type(x) == QString:
@@ -293,9 +300,9 @@ class MainWindow(QMainWindow, WindowMixin):
         # formats = ['*.%s' % str(fmt).lower() \
         #            for fmt in QImageReader.supportedImageFormats()]
         formats = "*.bmp *.jpeg *.jpg *.png"
-        filters = "Image & Label files (%s)" % formats
+        filters = "Image & Label files ({})".format(formats)
         filename = QFileDialog.getOpenFileName(self,
-            '%s - Choose Image file' % __appname__,
+            '{} - Choose Image file'.format(__appname__),
             path, filters)
 
         # for qt5 compatibility
@@ -346,8 +353,9 @@ class MainWindow(QMainWindow, WindowMixin):
             if self.imageData.isNull():
                 self.errorMessage(
                     u'Error opening file',
-                    u"<p>Make sure <i>%s</i> is a valid image file." %
-                    filename)
+                    u"<p>Make sure <i>{}</i> is a valid image file.".format(
+                       filename
+                    ))
                 self.status("Error reading %s" % filename)
                 return False
             self.canvas.setEnabled(True)
@@ -455,7 +463,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 if self.imgFname else '.'
 
         dir_path = ustr(QFileDialog.getExistingDirectory(self,
-            '%s - Open Directory' % __appname__,  curr_path,
+            '{} - Open Directory'.format(__appname__),  curr_path,
             QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
 
         if dir_path is not None and len(dir_path) > 1:
@@ -469,7 +477,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 if self.imgFname else '.'
 
         dir_path = ustr(QFileDialog.getExistingDirectory(self,
-            '%s - Open Directory' % __appname__,  curr_path,
+            '{} - Open Directory'.format(__appname__),  curr_path,
             QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
 
         if dir_path is not None and len(dir_path) > 1:
@@ -497,7 +505,7 @@ class MainWindow(QMainWindow, WindowMixin):
         curr_path = os.path.dirname(self.imgFname) \
                 if self.imgFname else '.'
         dir_path = ustr(QFileDialog.getExistingDirectory(self,
-            '%s - Open Directory' % __appname__,  curr_path,
+            '{} - Open Directory'.format(__appname__),  curr_path,
             QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
 
         if dir_path:
@@ -590,10 +598,10 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def allStat(self):
         all_stat = {
-        'correct_box': 0,
-        'deviation_box': 0,
-        'error_box': 0,
-        'miss_box': 0,
+            'correct_box': 0,
+            'deviation_box': 0,
+            'error_box': 0,
+            'miss_box': 0,
         }
         if self.imageList and len(self.imageList) > 0:
             for image_name in self.imageList:
@@ -654,7 +662,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 curr_path = os.path.dirname(self.imgFname) \
                     if self.imgFname else '.'
                 dir_path = ustr(QFileDialog.getExistingDirectory(self,
-                    '%s - Open Directory' % __appname__,  curr_path,
+                    '{} - Open Directory'.format(__appname__), curr_path,
                     QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks))
 
         if dir_path is not None and len(dir_path) > 1:
@@ -806,7 +814,6 @@ class MainWindow(QMainWindow, WindowMixin):
                     break
             self.canvas.update()
 
-
     def testImg(self):
         from m_widgets.shape import PropShape
         # if len(self.canvas.true_meta_shapes) < 1:
@@ -831,12 +838,15 @@ def excepthook(excType, excValue, tracebackobj):
     @param tracebackobj traceback object
     """
     separator = '-' * 80
-    logFile = "simple.log"
+    logFile = os.path.join(__home__, "error.log")
+    issue_url = "https://github.com/yoobright/qt_img/issues"
     notice = \
-        """An unhandled exception occurred. Please report the problem\n"""\
-        """using the error reporting dialog or via email to <%s>.\n"""\
-        """A log has been written to "%s".\n\nError information:\n""" % \
-        ("yourmail at server.com", "")
+        """An unhandled exception occurred.<br>"""\
+        """ Please report the problem """\
+        """using the error reporting dialog and make a issue to """\
+        """<a href="{}">{}</a><br>"""\
+        """A log has been written to "{}".<br><br>Error information:\n"""\
+            .format(issue_url, issue_url, logFile)
     versionInfo = "0.0.1"
     timeString = time.strftime("%Y-%m-%d, %H:%M:%S")
 
@@ -844,19 +854,36 @@ def excepthook(excType, excValue, tracebackobj):
     traceback.print_tb(tracebackobj, None, tbinfofile)
     tbinfofile.seek(0)
     tbinfo = tbinfofile.read()
-    errmsg = '%s: \n%s' % (str(excType), str(excValue))
+    errmsg = '{}: \n{}'.format(excType, excValue)
     sections = [separator, timeString, separator, errmsg, separator, tbinfo]
     msg = '\n'.join(sections)
+
+    def multiple_replace(text, adict):
+        rx = re.compile('|'.join(map(re.escape, adict)))
+
+        def one_xlat(match):
+            return adict[match.group(0)]
+
+        return rx.sub(one_xlat, text)
+
+    trans = {
+        '<': '&lt;',
+        '>': '&gt;'
+    }
+    msg_show = multiple_replace(msg, trans)
+    msg_show = "<pre>{}</pre>".format(msg_show)
+
     try:
-        f = open(logFile, "w")
-        f.write(msg)
-        f.write(versionInfo)
-        f.close()
+        with open(logFile, "w") as f:
+            f.write(msg)
+            f.write(versionInfo)
     except IOError:
         pass
     errorbox = QMessageBox()
-    errorbox.setText(str(notice)+str(msg)+str(versionInfo))
-    errorbox.setWindowTitle(' An Unhandled Exception Occurred')
+    # errorbox.setTextFormat(Qt.PlainText)
+    errorbox.setTextFormat(Qt.RichText)
+    errorbox.setText(str(notice)+str(msg_show)+str(versionInfo))
+    errorbox.setWindowTitle('An Unhandled Exception Occurred')
     errorbox.exec_()
 
 sys.excepthook = excepthook
