@@ -37,13 +37,11 @@ class Shape(object):
     def __setitem__(self, key, item):
         self.__dict__[key] = item
 
-    def __cmp__(self, other):
-        if self.area < other.area:
-            return -1
-        elif self.area > other.area:
-            return 1
-        else:
-            return 0
+    def __lt__(self, other):
+        return self.area < other.area
+
+    def __eq__(self, other):
+        return self.area == other.area
 
     @property
     def area(self):
