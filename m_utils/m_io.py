@@ -158,7 +158,7 @@ class NewWriter:
             self.appendObjects(root)
             out_file = None
             if targetFile is None:
-                targetFile = self.filename + '.xml'
+                targetFile = self.filename.split('.')[0] + '.xml'
             if dir:
                 if not os.path.exists(dir):
                     os.mkdir(dir)
